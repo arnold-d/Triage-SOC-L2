@@ -4,14 +4,16 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
 
 ---
 
-## 2026-11-02 · Fase 2.5 (en curso, sin cerrar)
+## 2026-11-02 · Fase 2.5 (cerrada)
 
 - **Qué cambió**: repositorio y `.gitignore`; código anterior en `legacy/`; `app/` separada en `index.html`, `css/app.css` y `js/` (`engine`, `parser`, `ui-comun`, `ui-registros`, `ui-analisis`, `app`), sin paso de build. El motor solo cambia en un comentario. El nombre del archivo y el recuento del botón de ejemplo salen ahora de `sample.local.js`. `tests/test_cliente.js` comprueba también las criticidades y que los Log_ID citados existan.
 - **SheetJS**: se incorpora la 0.20.3, última versión de `cdn.sheetjs.com`. La 0.18.5 de npm está afectada por CVE-2023-30533 (contaminación de prototipos, corregida en 0.19.3) y CVE-2024-22363 (ReDoS, corregida en 0.20.2), y la app abre Excel de terceros. SHA-256 de `app/vendor/xlsx.full.min.js`: `cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41`.
 - **Doctype y charset**: `index.html` los declara; la versión anterior funcionaba en modo de compatibilidad. Para conservar la altura de las filas de la tabla se añadió `line-height:normal`.
 - **En pantalla**: Carga y Análisis son idénticas píxel a píxel a la versión anterior, a 1280 y 400 px. En Registros, el texto es igual y las filas miden lo mismo; la etiqueta de incidente baja 2–3 px y el texto de severidad 1 px.
 - **Pruebas**: `node tests/test_cliente.js` (ejecutado por el usuario, Excel leído con SheetJS 0.20.3) → 6 incidentes (4 Crítico, 2 Alto) + 2 a validar, Log_ID correctos. `tools/generar_sample.js` genera 715 eventos, idénticos fila a fila a los datos anteriores. App sin red y sin ejecutar SheetJS, con datos de ejemplo: sin errores de JavaScript.
-- **Pendiente**: confirmar dos criterios de aceptación en el navegador, arrastrar el Excel con doble clic en `index.html` y repetirlo sin internet. Comprobar en la fase 2.6 que las fechas nativas de Excel se leen correctamente con la 0.20.3.
+- **Aceptación**: el usuario abrió `index.html` con doble clic y arrastró el Excel: funcionó y se ve bien. **Prueba sin internet: no probado, descartado por el usuario** (SheetJS ya está incluido en `vendor/`); no cuenta como cumplida.
+- **Repositorio**: `.gitattributes` con `app/vendor/** -text` para que `vendor/` no convierta saltos de línea y el SHA-256 anterior siga siendo válido.
+- **Pendiente**: comprobar en la fase 2.6 que las fechas nativas de Excel se leen correctamente con la 0.20.3.
 
 ## 2026-10-31 · Fases 1 y 2 (hechas en el chat de planificación)
 

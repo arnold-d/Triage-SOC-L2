@@ -13,7 +13,7 @@ Si el día 1 se alarga, la fase 3 pasa al día 2 y la 7 se reduce al README.
 
 ---
 
-## [ ] Fase 2.5: Reestructurar (día 1, unas 2 h)
+## [x] Fase 2.5: Reestructurar (día 1, unas 2 h)
 
 Objetivo: pasar de "plantilla + build.py" a la estructura de `CLAUDE.md`, sin cambiar lo que el usuario ve.
 
@@ -43,8 +43,8 @@ Objetivo: pasar de "plantilla + build.py" a la estructura de `CLAUDE.md`, sin ca
 8. Borrar `build.py` y `app/triage-soc-l2.html` del flujo (pueden quedar en `legacy/`).
 
 Aceptación:
-- [ ] `app/index.html` abierto con doble clic (`file://`) en Windows carga el Excel arrastrado y muestra Registros y Análisis igual que antes.
-- [ ] Funciona sin internet (probar desconectando la red).
+- [x] `app/index.html` abierto con doble clic (`file://`) en Windows carga el Excel arrastrado y muestra Registros y Análisis igual que antes.
+- [ ] Funciona sin internet (probar desconectando la red). **No probado, descartado por el usuario** (02-11-2026): SheetJS ya está incluido en `vendor/`.
 - [x] `node tests/test_cliente.js` → 6 incidentes + 2 a validar.
 - [x] `git status` no muestra ni el Excel, ni `sample.local.js`, ni videos.
 
