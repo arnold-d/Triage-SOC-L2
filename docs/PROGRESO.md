@@ -4,7 +4,7 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
 
 ---
 
-## 2026-11-02 · Fase 3 (pendiente del visto bueno del usuario)
+## 2026-11-02 · Fase 3 (cerrada)
 
 - **Qué cambió**:
   - Pestaña Dashboard, entre Análisis e Informe, en `js/ui-dashboard.js`, con gráficos en SVG propio.
@@ -18,9 +18,9 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
   - Actividad en el tiempo: columnas apiladas de eventos normales y con incidente, y debajo la franja de cada incidente con su ID. Incluye la vista en tabla.
   - Top de hosts, cuentas e IP externas, y técnicas MITRE observadas.
   - Clic en una barra o columna: filtra Registros por esas filas. Clic en una franja: salta al incidente. Tooltip al pasar el ratón o con el foco.
-- **Colores**: la serie principal usa `--chart` y los eventos normales `--chart-base`, separados de la paleta de riesgo. El validador da separación suficiente en ambos temas; el gris no alcanza el mínimo de croma porque es deliberadamente neutro. Los colores de riesgo son de estado, no categóricos: Alto y Medio se parecen con daltonismo (ΔE 3,7), así que siempre llevan su texto.
+- **Colores**: la serie principal usa `--chart` y los eventos normales `--chart-base`, separados de la paleta de riesgo. El validador da separación suficiente en ambos temas; el gris no alcanza el mínimo de croma porque es deliberadamente neutro. Del enunciado solo son el azul marino y el naranja; los colores de riesgo son del proyecto y se pueden ajustar. Medio pasa a `#c2a000` (claro) y `#f2d65c` (oscuro): la separación con Alto con daltonismo sube de ΔE 3,7 a 10,3 y de 4,4 a 12,2. Lleva texto oscuro y cada criticidad sigue mostrando su nombre. Crítico-Alto en tema oscuro sigue justo (ΔE 7,2), con el texto como refuerzo.
 - **Pruebas**: `node tests/test_dashboard.js`, `node tests/test_cliente.js` y `node tests/test_generalizacion.js` correctas. En Edge, con el Excel del cliente y 2 sintéticos, en tema claro y oscuro, a 1280 y 400 px: cifras iguales a Análisis, sin scroll horizontal y sin errores de JavaScript. Clics comprobados a 1280 px en tema oscuro.
-- **Pendiente**: visto bueno del usuario.
+- **Aceptación**: el usuario arrastró su Excel y comprobó 6 incidentes, 24 hallazgos, 121 de 715 eventos, 79 eventos al hacer clic en Crítico y el tooltip.
 
 ## 2026-11-02 · Fase 2.6 (cerrada)
 

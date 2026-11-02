@@ -113,7 +113,7 @@ Aceptación:
 - [x] `node tests/test_cliente.js` sigue dando 6 + 2.
 - [x] Un dataset sintético (`datasets/demo_publico.xlsx`) cargado en la app muestra sus incidentes correctamente. Ese archivo sí puede ir a GitHub como ejemplo público; añadir una excepción al `.gitignore` solo para él.
 
-## [ ] Fase 3: Dashboard (día 1, unas 2–3 h)
+## [x] Fase 3: Dashboard (día 1, unas 2–3 h)
 
 Pestaña **Dashboard**, entre Análisis e Informe. Gráficos en SVG propio, con colores de los tokens y en ambos temas.
 
