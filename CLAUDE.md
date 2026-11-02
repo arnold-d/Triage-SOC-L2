@@ -19,7 +19,7 @@ App web que carga un Excel exportado de un SIEM, detecta y correlaciona incident
 1. **Rigor analítico: no inventar hallazgos.** Toda conclusión cita Log_ID reales del archivo cargado.
 2. **Nada fijo del dataset en el código**: ni IPs, ni usuarios, ni hosts, ni Log_ID, ni fechas. Solo reglas genéricas con umbrales en `cfg`. Si una regla necesita un valor del Excel del cliente para acertar, está mal hecha.
 3. **La IA no decide qué es un incidente.** Lo deciden las reglas del motor. La IA explica, redacta y sugiere; la app valida que cada Log_ID o IP que cite exista y marca lo que no.
-4. **La app funciona completa sin IA** (proveedor `none`, con plantillas).
+4. **La app funciona completa sin IA** (proveedor `none`, con plantillas). **Nunca usar `OLLAMA_ORIGINS=*`**: expone Ollama a cualquier web visitada. Para Ollama, la app se abre con `iniciar`.
 5. **Multiplataforma**: debe funcionar igual en Windows y Linux. Usa `path.join` en Node, nada de comandos exclusivos de un shell y archivos siempre en UTF-8.
 6. **Nada sensible en git**: ni el Excel del cliente, ni datos derivados de él (tampoco IPs, cuentas o Log_ID suyos en la documentación), ni claves o tokens, ni la configuración local de IA, ni videos o audios. Lo específico del cliente va en `CLAUDE.local.md` o en `docs/local/`, ambos ignorados por git.
 7. Tras cualquier cambio en el motor, deben pasar **las dos pruebas**: `node tests/test_cliente.js` (6 incidentes y 2 anomalías a validar con el Excel del cliente) y `node tests/test_generalizacion.js` (datasets sintéticos). Las cifras del dashboard se comprueban con `node tests/test_dashboard.js`.
@@ -28,7 +28,7 @@ App web que carga un Excel exportado de un SIEM, detecta y correlaciona incident
 
 ```
 app/
-  index.html               interfaz; abre con doble clic (file://) o servida
+  index.html               interfaz; con doble clic funciona sin IA; con Ollama, abrir con iniciar
   css/app.css
   js/engine.js             motor de reglas → SOCEngine.analyze(rows, cfg)
   js/parser.js             lectura del .xlsx y normalización de columnas
@@ -40,10 +40,14 @@ app/
   ai.config.example.js     ejemplo                  → sí va a git
   ai.config.local.js       configuración del autor  → NO va a git
   sample.local.js          Excel del cliente en JS  → NO va a git
+iniciar.bat, iniciar.sh    lanzadores de tools/servir.js
+tools/servir.js            sirve app/ en 127.0.0.1:8765 y abre el navegador, sin dependencias
 tools/generar_dataset.js   genera Excel sintéticos + verdad de referencia (.truth.json)
 tests/test_cliente.js      prueba con el Excel del cliente (solo local)
 tests/test_generalizacion.js  N semillas sintéticas: cobertura y falsos positivos
 tests/test_dashboard.js    cuadra las cifras del dashboard con las del motor
+tests/test_ia.js           adaptadores de IA, errores, validador de citas y prompts, sin proveedor real
+tests/test_servir.js       servidor local: solo 127.0.0.1, sin salir de app/, Host comprobado
 docs/                      PLAN, REQUISITOS, PROGRESO
 legacy/                    versión anterior (fase 1–2) como referencia
 ```

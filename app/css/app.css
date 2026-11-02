@@ -178,6 +178,22 @@ tbody tr td:first-child{box-shadow:inset 3px 0 0 var(--c,transparent)}
 .valid{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:14px 18px;display:grid;gap:10px}
 .idsbanner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface-2);border-radius:var(--r);padding:6px 10px;font-size:13px}
 .inc-chip{font-family:var(--f-mono);font-size:11px;border-radius:4px;padding:1px 6px;color:var(--pill-ink);background:var(--c);white-space:nowrap;cursor:pointer}
+/* IA */
+.ai-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ai-box:empty{display:none}
+.ai-text{display:grid;gap:6px;font-size:13px;max-width:100ch;border-left:3px solid var(--line);padding-left:12px}
+.ai-text p{margin:0}
+.ai-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ai-err{font-size:12.5px;color:var(--sev-high)}
+.ai-warn{margin:0;font-size:12.5px;font-weight:500;color:var(--fg);border-left:3px solid var(--accent);padding-left:10px}
+.ai-status{min-height:18px;font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.ai-status.ok{color:var(--fg)}
+.ai-status.error{color:var(--sev-high)}
+.cite-sum{font-size:12px;font-weight:600;color:var(--fg)}
+.cite-sum.good::before{content:"✓ "}
+.cite-sum.bad::before{content:"⚠ "}
+mark.cite-missing,mark.cite-outside,mark.cite-mismatch{background:none;color:var(--sev-high);font-weight:600;text-decoration:underline wavy}
+.find p{margin:0}
 /* Dashboard */
 .dkpis{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media (max-width:980px){.dkpis{grid-template-columns:repeat(3,minmax(0,1fr))}.dkpis .kpi:last-child{grid-column:span 2}}
@@ -199,6 +215,7 @@ tbody tr td:first-child{box-shadow:inset 3px 0 0 var(--c,transparent)}
 .bar-l small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--muted)}
 .bar-t{display:block;width:100%;height:14px;overflow:hidden}
 @media (max-width:560px){.bar-row{grid-template-columns:minmax(0,1fr) 34px;gap:2px 10px}.bar-l{grid-column:1/-1}}
+.find .cite-sum{display:block;margin-top:2px}
 .bar-v{font-size:13px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
 .dlegend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 .dlegend span{display:inline-flex;align-items:center;gap:6px}

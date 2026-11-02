@@ -19,6 +19,11 @@ function incidentSentence(i) {
   const quien = [i.users.join(", "), i.ips.length ? `desde ${i.ips.join(", ")}` : ""].filter(Boolean).join(" ");
   return `Entre ${hm(i.start)} y ${hm(i.end)}${quien ? `, ${quien}` : ""}. Equipos: ${i.hosts.join(", ")}. ${i.findings.length} hallazgo(s) y ${i.evidence.length} evento(s) de evidencia.`;
 }
+// La explicación de la IA sustituye a la plantilla cuando existe
+function incidentSummary(i) {
+  const e = state.ai.explain.get(i.id);
+  return e?.status === "done" ? `${citedHTML(e.text, e.cit)}${citeSummary(e.cit)}` : esc(incidentSentence(i));
+}
 function roundedTop(x, y, w, h) {
   const r = Math.min(4, w / 2, h);
   return `M${x} ${y + h}V${y + r}Q${x} ${y} ${x + r} ${y}H${x + w - r}Q${x + w} ${y} ${x + w} ${y + r}V${y + h}Z`;
@@ -109,7 +114,7 @@ function renderDashboard() {
   $("view-dashboard").innerHTML = `
     <div class="kpis dkpis">${tiles.map(([l, v, s]) => `<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${esc(s)}</span></div>`).join("")}</div>
     <section class="dcard"><h3>Qué encontramos</h3>
-      ${A.incidents.length ? `<ul class="finds">${A.incidents.map(i => `<li><button class="find" data-goinc="${i.id}"><span class="pill" style="--c:${RISK_COLOR[i.sev]}">${i.sev}</span><span><b>${i.id} · ${esc(i.title)}</b><br>${esc(incidentSentence(i))}</span></button></li>`).join("")}</ul>` : `<p class="dnote">No se identificaron incidentes en este archivo.</p>`}
+      ${A.incidents.length ? `<ul class="finds">${A.incidents.map(i => `<li><button class="find" data-goinc="${i.id}"><span class="pill" style="--c:${RISK_COLOR[i.sev]}">${i.sev}</span><span><b>${i.id} · ${esc(i.title)}</b><br>${incidentSummary(i)}</span></button></li>`).join("")}</ul>` : `<p class="dnote">No se identificaron incidentes en este archivo.</p>`}
     </section>
     <div class="dgrid2">
       ${dashCard("Incidentes por criticidad", "Clic en una barra para ver sus evidencias en Registros.", barList(riesgo, "incidente(s)"))}

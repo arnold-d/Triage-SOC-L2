@@ -81,6 +81,7 @@ const ESCENARIOS = {
     out.push(ok(paso(1, 2), app, "4688", u, ip, "", "New process created; parent=powershell.exe", `net.exe view \\\\${fs_}`, "High"));
     out.push(ok(paso(1, 2), fs_, "4624", u, interna, fs_, `An account was successfully logged on (LogonType=3; source=${app})`, "", "High"));
     out.push(ok(paso(1, 2), fs_, "5140", u, interna, fs_, `Network share accessed: \\\\${fs_}\\${rec}`, "", "High"));
+    out.push(ok(m + 20e3, fs_, "5145", u, interna, fs_, `Detailed file share access: ${rec}\\Presupuesto.xlsx`, "", "High"));
     out.push(ok(paso(1, 3), app, "4688", u, ip, "", "New process created; possible staging archive", `tar.exe -a -c -f C:\\Temp\\${rec.toLowerCase()}.zip C:\\Temp\\reports`, "High"));
     out.push(fila(paso(1, 2), app, "5156", u, interna, `${A.ip()}:443`, "Firewall", "Allowed outbound connection (process=powershell.exe)", "powershell.exe", "Success", "High", true));
     return { tipo: "rdp", categorias: ["brute", "logon", "priv", "exec", "lateral", "other"], sevMin: "Crítico", actor: u, filas: out };

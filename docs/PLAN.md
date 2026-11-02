@@ -134,8 +134,8 @@ Aceptación:
 
 1. **Primero, verificar el entorno del autor** y anotarlo en PROGRESO:
    - `ollama --version` y `ollama list`.
-   - Probar 1–2 modelos de 7–8B (p. ej. qwen2.5:7b, llama3.1:8b) que quepan en 6 GB de VRAM (GTX 1660 Super). Elegir por calidad del español y tiempo de respuesta medidos.
-   - Comprobar si `index.html` abierto como `file://` puede llamar a `http://localhost:11434`. Si el navegador lo bloquea (CORS), documentar la solución probada: variable `OLLAMA_ORIGINS` o servir con `python -m http.server`.
+   - Probar 1–2 modelos de 7–8B (p. ej. qwen2.5:7b, llama3.1:8b) que quepan en 6 GB de VRAM (GTX 1660 Super). Elegir por calidad del español y tiempo de respuesta medidos. Elegido `qwen2.5:7b` (ver PROGRESO).
+   - Comprobado el 02-11-2026: abierto como `file://`, Ollama rechaza `Origin: null` con 403. Decisión del usuario: no usar `OLLAMA_ORIGINS=*`, que expone Ollama a cualquier web. La app se abre con `iniciar`, que sirve `app/` en `http://127.0.0.1:8765` (`tools/servir.js`). Con doble clic funciona sin IA y, al elegir Ollama, avisa: "Para usar Ollama, abre la app con iniciar".
 2. `js/ai.js`: interfaz `chat(messages, {temperature, maxTokens, signal}) → texto` con adaptadores `none`, `ollama` (API nativa `/api/chat`), `openai-compatible` (URL base + modelo + clave opcional) y `anthropic` (opcional).
 3. Panel **Ajustes de IA**: proveedor, URL, modelo, clave, botón "Probar conexión" e indicador de estado. Se guarda en `localStorage`; `ai.config.local.js` puede dar valores por defecto.
 4. Usos, con prompts en español y temperatura baja:
@@ -146,10 +146,10 @@ Aceptación:
 6. Errores: tiempo de espera, IA no disponible o respuesta vacía → mensaje claro y uso de la plantilla.
 
 Aceptación:
-- [ ] Con `none`, la app funciona entera.
-- [ ] Con Ollama en el equipo del autor, cada incidente del cliente tiene explicación y el validador muestra sus citas.
-- [ ] Una cita inventada a propósito (prueba manual) aparece marcada como no encontrada.
-- [ ] Ninguna clave ni configuración local en `git status`.
+- [x] Con `none`, la app funciona entera.
+- [x] Con Ollama en el equipo del autor, cada incidente del cliente tiene explicación y el validador muestra sus citas.
+- [x] Una cita inventada a propósito (prueba manual) aparece marcada como no encontrada.
+- [x] Ninguna clave ni configuración local en `git status`.
 
 ## [ ] Fase 5: Informes ejecutivo y técnico (día 2, unas 2–3 h)
 

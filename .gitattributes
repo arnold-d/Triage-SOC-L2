@@ -1,1 +1,3 @@
 app/vendor/** -text
+*.sh text eol=lf
+*.bat text eol=crlf

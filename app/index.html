@@ -16,6 +16,7 @@
     <button class="tab" role="tab" aria-selected="false" id="tab-analisis" disabled>Análisis</button>
     <button class="tab" role="tab" aria-selected="false" id="tab-dashboard" disabled>Dashboard</button>
     <button class="tab" role="tab" aria-selected="false" disabled>Informe PDF<small>F5</small></button>
+    <button class="tab" id="btnIA">Ajustes de IA</button>
   </nav>
 </header>
 
@@ -24,7 +25,7 @@
     <label class="drop" id="drop" for="file">
       <div class="eyebrow">Paso 1 · Carga del export</div>
       <h2>Arrastra el Excel exportado del SIEM</h2>
-      <p>Archivo .xlsx con una fila por evento. Se procesa en tu navegador: los registros no salen de este equipo.</p>
+      <p id="dropPrivacy">Archivo .xlsx con una fila por evento. Se procesa en tu navegador: los registros no salen de este equipo.</p>
       <span class="btn primary">Seleccionar archivo .xlsx</span>
       <input type="file" id="file" accept=".xlsx,.xls" hidden>
       <div class="err" id="loadErr" hidden></div>
@@ -113,6 +114,7 @@
 
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" hidden aria-label="Detalle del evento"></aside>
+<aside class="drawer" id="aiPanel" hidden aria-label="Ajustes de IA"></aside>
 <div class="dtip" id="dtip" hidden></div>
 
 <script src="vendor/xlsx.full.min.js"></script>
@@ -121,7 +123,9 @@
 <script src="ai.config.local.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/parser.js"></script>
+<script src="js/ai.js"></script>
 <script src="js/ui-comun.js"></script>
+<script src="js/ui-ia.js"></script>
 <script src="js/ui-registros.js"></script>
 <script src="js/ui-analisis.js"></script>
 <script src="js/dashboard-data.js"></script>

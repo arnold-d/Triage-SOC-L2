@@ -4,6 +4,40 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
 
 ---
 
+## 2026-11-02 · Fase 4 (pendiente del visto bueno del usuario)
+
+- **Entorno del autor**: Ollama 0.40.13 instalado con winget. GTX 1660 Super de 6 GB, con unos 2 GB en uso por otros programas; el modelo elegido queda al 82 % en GPU y el resto en CPU.
+- **Conexión**: abierta con doble clic, la app envía `Origin: null` y Ollama responde 403 (comprobado). `OLLAMA_ORIGINS=null` hace que Ollama no arranque (`panic: bad origin`), y `OLLAMA_ORIGINS=*` funciona pero admite a cualquier web, incluso métodos como DELETE. Decisión del usuario: no usar `OLLAMA_ORIGINS`, cuyo valor no se llegó a cambiar. `iniciar.bat` e `iniciar.sh` lanzan `tools/servir.js`, que sirve `app/` en `http://127.0.0.1:8765` y abre el navegador. Ollama admite ese origen por defecto y sigue rechazando webs ajenas. Con doble clic la app funciona entera sin IA y, al elegir Ollama, avisa: "Para usar Ollama, abre la app con iniciar". El motivo está también en el README.
+- **Qué cambió**:
+  - `js/ai.js`: `chat(...)` con adaptadores `none`, `ollama`, `openai-compatible` y `anthropic`, validador de citas, prompts en español y errores. Las líneas de log van marcadas como datos, no como instrucciones.
+  - `js/ui-ia.js`: panel Ajustes de IA, "Explicar con IA", "Explicar los N incidentes" y "Sugerencias del analista IA".
+  - Validador semántico: si la frase de una cita nombra una cuenta, un equipo o una IP, comprueba que coincidan con la fila y marca "con datos que no coinciden". La cuenta se revisa fila a fila; equipos e IP, frente a todas las filas citadas en la frase. Los rangos entre dos Log_ID reales se validan por sus extremos.
+  - Regla de recurso sensible: reconoce también el recurso en el detalle de los 5145 (`Recurso\\archivo`). El generador incluye ahora ese caso en el escenario RDP.
+  - Para la demo: las explicaciones se guardan durante la sesión del navegador y se revalidan al abrir el mismo archivo. "Probar conexión" deja el modelo cargado, y cada petición lo mantiene 30 minutos.
+  - `tools/servir.js`: solo `127.0.0.1`, solo `app/`, solo GET y HEAD, y comprueba `Host` para evitar DNS rebinding. Con `tests/test_servir.js`.
+- **La IA encontró una evidencia que las reglas no veían**: la primera sugerencia de `qwen2.5:7b` señaló un acceso a un fichero sensible por 5145 que no estaba en las evidencias de un incidente, porque la regla solo reconocía rutas `\\\\host\\recurso`. El usuario lo revisó y se corrigió la regla de forma genérica. Con el Excel del cliente, ese evento entra en INC-02 y pasan a ser 25 hallazgos y 122 de 715 eventos; siguen siendo 6 incidentes con las mismas criticidades y 2 anomalías a validar.
+- **Elección del modelo: `qwen2.5:7b`**, por citas correctas y luego velocidad. Segunda medición, 6 incidentes y una sugerencia con el Excel del cliente, recalculada con el validador final:
+
+  | | `qwen2.5:7b` | `llama3.1:8b` |
+  |---|---|---|
+  | Citas correctas | 77 de 79 (97,5 %) | 63 de 66 (95,5 %) |
+  | Citas inventadas | 0 | 0 |
+  | Citas con datos que no coinciden | 2 | 3 |
+  | Frases con cita | 29 de 31 (94 %) | 27 de 35 (77 %) |
+  | Tiempo total | 246 s | 299 s |
+  | Mediana por respuesta | 32,0 s | 43,2 s |
+  | Velocidad | 17,7 tokens/s | 9,5 tokens/s |
+  | Palabras, máximo (límite pedido: 150) | 113 | 144 |
+
+  La diferencia en citas es de pocas unidades y una sola pasada; la velocidad sí es clara. Con el prompt inicial los modelos citaban solo 9 y 16 veces: las mejoras fueron exigir una cita por frase, dar los Log_ID por hallazgo y repetir la regla al final. Un ejemplo de frase en el prompt se copiaba en las respuestas, así que no se usa ninguno.
+- **Aceptación con el modelo real, en Edge por `iniciar`**: `qwen2.5:7b` explicó los 6 incidentes en 230 s con 73 citas verificadas y 0 no válidas. Una cita y una IP inventadas a propósito quedaron marcadas. La sugerencia dio 10 citas verificadas y 1 con datos que no coinciden, marcada en pantalla. Tras recargar y abrir el mismo Excel, las explicaciones siguieron ahí. Por doble clic: sin IA funciona, el aviso aparece en el panel y en Análisis, y no hay llamadas a Ollama. Sin errores de JavaScript.
+- **Pruebas**: `test_ia` 56 de 56; `test_servir` 12 de 12; `test_dashboard` 144 de 144; `test_cliente` 6 + 2; `test_generalizacion` 100 % y 0 falsos en 30 semillas. La demo (semilla 445) se regeneró porque el generador cambió: sigue dando 7 incidentes y 4 a validar.
+- **Limitaciones**:
+  - El validador no detecta cantidades ni interpretaciones falsas con citas válidas. En la prueba final, una explicación decía que todas las peticiones web llevaban parámetros de comando, cuando solo algunas los llevaban. Las explicaciones deben revisarse antes de ir a un informe.
+  - El validador también puede avisar de más: es una comprobación ligera, no una prueba de que la frase sea falsa.
+  - Adaptadores `openai-compatible` y `anthropic` probados solo contra servidores simulados.
+- **Pendiente**: visto bueno del usuario.
+
 ## 2026-11-02 · Fase 3 (cerrada)
 
 - **Qué cambió**:

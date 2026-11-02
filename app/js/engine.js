@@ -245,13 +245,20 @@ const SOCEngine = (() => {
       }
     }
     // Acceso a recursos compartidos sensibles
-    const SENS = /\\\\[^\\]+\\(Finance|Finanzas|Legal|RRHH|HR|Payroll|Nominas)/i;
-    for (const r of R.filter(r => (r.evt === "5140" || r.evt === "5145") && SENS.test(r.dst + " " + r.desc))) {
+    const SHARES = "Finance|Finanzas|Legal|RRHH|HR|Payroll|Nominas";
+    const SENS = new RegExp(`\\\\\\\\[^\\\\]+\\\\(${SHARES})`, "i");
+    const SENS_FILE = new RegExp(`(?<![\\w\\\\])(?:${SHARES})\\\\[^\\s;]+`, "i"); // detalle del 5145: "Recurso\\archivo"
+    const sensitive = r => {
+      if (r.evt !== "5140" && r.evt !== "5145") return null;
+      const share = SENS.exec(r.dst + " " + r.desc);
+      return share ? share[0] : r.evt === "5145" ? SENS_FILE.exec(r.desc)?.[0] : null;
+    };
+    for (const r of R.filter(sensitive)) {
       add({
         cat: "other", rule: "Acceso a recurso sensible", mitre: "T1039", sev: "Medio", weak: true,
-        title: `${r.user} accede a ${(SENS.exec(r.dst + " " + r.desc) || [""])[0]}`,
+        title: `${r.user} accede a ${sensitive(r)}`,
         detail: `${hhmm(r)} · ${r.desc} (${r.host}).`,
-        why: "Recurso con información confidencial; relevante por su cercanía a otras acciones sospechosas de la misma cuenta.",
+        why: "Recurso con información confidencial; relevante si la misma cuenta tiene otras acciones sospechosas cerca.",
         actors: { ips: [], users: [r.user] }, evidence: [r], start: r, end: r,
       });
     }

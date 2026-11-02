@@ -47,12 +47,15 @@ function renderAnalysis(){
       ${A.validations.length?`<span class="pill out" style="--c:var(--risk-low)">${A.validations.length} anomalía${A.validations.length>1?"s":""} a validar</span>`:""}</div>
     <p>${A.findings.length-A.validations.length} hallazgos respaldados por ${totalEv} de ${state.rows.length} eventos. Cada hallazgo procede de una regla aplicada a los registros y cita sus Log_ID; los incidentes agrupan hallazgos que comparten cuenta o IP atacante en una ventana de tiempo.</p>
     <div class="cats">${CAT_ORDER.map(c=>`<div class="cat ${catCount(c)?"":"zero"}"><b>${catCount(c)}</b><span>${A.CAT[c]}</span></div>`).join("")}</div>
+    <div class="ai-bar" id="aiToolbar"></div>
   </section>`;
   if(I.length) html += timelineSVG(I,R0);
   html += `<section class="sect"><h3>Incidentes</h3>${I.map(incCard).join("")}</section>`;
   if(A.validations.length) html += `<section class="valid"><div class="eyebrow" style="color:var(--risk-low)">A validar con el cliente · no son incidentes</div>
     ${A.validations.map(f=>`<div style="display:grid;gap:4px"><div class="hd"><strong>${esc(f.title)}</strong> <span class="tag mitre">${esc(f.mitre)}</span></div><div class="det" style="font-size:13px">${esc(f.detail)}</div><div class="wh" style="font-size:12.5px;color:var(--muted)">${esc(f.why)}</div><div class="evs">${evChips(f.evidence,5)}</div></div>`).join("")}</section>`;
+  html += `<section class="valid" id="aiSuggest" ${state.ai.suggest?"":"hidden"}>${aiSuggestBlock()}</section>`;
   $("view-analisis").innerHTML = html;
+  aiToolbarPaint();
 }
 function incCard(i){
   const c=RISK_COLOR[i.sev];
@@ -65,6 +68,7 @@ function incCard(i){
         <span>Equipos <b>${i.hosts.map(esc).join(", ")}</b></span>
         <span>Evidencias <b>${i.evidence.length}</b> <button class="linkbtn" data-show="${i.id}">ver en registros</button></span></div>
       <div class="why"><b>Criticidad ${i.sev}.</b> ${esc(i.why.replace(/^\S+ por: /,"Motivo: "))}</div>
+      <div class="ai-box" id="ai-${i.id}">${aiBlock(i.id)}</div>
     </header>
     <ol class="findings">${i.findings.map(f=>`<li class="finding">
       <span class="tm">${hm(f.start)}${hm(f.end)!==hm(f.start)?"–"+hm(f.end):""}</span>

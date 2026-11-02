@@ -24,7 +24,7 @@ function ingest(name, sheetName, header, data){
   if(sinFecha) avisos.push(`${sinFecha} fila(s) con fecha ilegible: se ven en Registros, pero no se analizan.`);
   w.hidden = !avisos.length;
   w.textContent = avisos.join(" ");
-  state.analysis = SOCEngine.analyze(rows); state.tlFit = false;
+  aiReset(); state.analysis = SOCEngine.analyze(rows); state.tlFit = false; aiRestore();
   resetFilters(); buildFilterOptions(); renderKpis(); apply(); renderAnalysis();
   $("tab-analisis").disabled = false; $("tab-dashboard").disabled = false;
   $("loader").hidden = true; $("loaded").hidden = false;
@@ -78,8 +78,13 @@ $("thead").addEventListener("click",e=>{
 });
 $("pager").addEventListener("click",e=>{ const b=e.target.closest("[data-p]"); if(!b) return; state.page+=+b.dataset.p; renderTable(); });
 $("tbody").addEventListener("click",e=>{ const tr=e.target.closest("tr[data-i]"); if(tr) openDetail(state.filtered[+tr.dataset.i]); });
-$("scrim").addEventListener("click",closeDetail);
-document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDetail(); });
+$("scrim").addEventListener("click",()=>{ closeDetail(); aiClose(); });
+aiLoadConfig(); aiPrivacy();
+$("btnIA").addEventListener("click",aiOpen);
+$("aiPanel").addEventListener("change",aiPanelInput);
+$("aiPanel").addEventListener("click",aiPanelClick);
+$("view-analisis").addEventListener("click",aiClick);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeDetail(); aiClose(); } });
 $("drawer").addEventListener("click",e=>{
   if(e.target.id==="closeD") return closeDetail();
   const gi=e.target.closest("[data-goinc]"); if(gi){ closeDetail(); goIncident(gi.dataset.goinc); return; }
