@@ -72,15 +72,29 @@ function incCard(i){
       </div></li>`).join("")}</ol>
   </article>`;
 }
+// Marcas del eje: el intervalo redondo más corto que deja como máximo maxTicks etiquetas
+const TICK_MIN=[1,5,10,15,30,60,120,180,240,360,720,1440,2880,10080];
+function timeTicks(t0,t1,maxTicks=8){
+  const dia=new Date(t0); dia.setHours(0,0,0,0);
+  const marcas=paso=>{ const out=[]; for(let tt=dia.getTime()+Math.ceil((t0-dia.getTime())/paso)*paso; tt<=t1; tt+=paso) out.push(tt); return out; };
+  for(const m of TICK_MIN){ const out=marcas(m*6e4); if(out.length<=maxTicks) return out; }
+  return marcas(TICK_MIN.at(-1)*6e4);
+}
+function timelineRange(I,R0){
+  const a=R0[0].tsDate.getTime(), b=R0.at(-1).tsDate.getTime();
+  if(!state.tlFit) return [a, Math.max(b,a+6e4)];
+  const ini=Math.min(...I.map(i=>i.start.tsDate.getTime())), fin=Math.max(...I.map(i=>i.end.tsDate.getTime()));
+  const margen=Math.max(5*6e4,(fin-ini)*.05);
+  return [Math.max(a,ini-margen), Math.max(Math.min(b,fin+margen),ini+6e4)];
+}
 function timelineSVG(I,R0){
-  const t0=R0[0].tsDate.getTime(), t1=R0.at(-1).tsDate.getTime();
+  const [t0,t1]=timelineRange(I,R0);
   const W=1000, L=300, Rt=16, top=26, lh=30, H=top+I.length*lh+8;
   const x=t=>L+(t-t0)/(t1-t0)*(W-L-Rt);
-  const ticks=[]; const d=new Date(t0); d.setMinutes(0,0,0); d.setHours(d.getHours()+1);
-  for(let tt=d.getTime(); tt<=t1; tt+=36e5) ticks.push(tt);
+  const ticks=timeTicks(t0,t1);
   const lanes=[...I].sort((a,b)=>a.start.tsDate-b.start.tsDate);
-  return `<section class="tl"><h3>Cronología de incidentes</h3><div class="tlwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cronología de incidentes">
-    ${ticks.map(tt=>`<line x1="${x(tt)}" x2="${x(tt)}" y1="${top-6}" y2="${H-4}" stroke="var(--line)"/><text x="${x(tt)}" y="14" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="JetBrains Mono, monospace">${String(new Date(tt).getHours()).padStart(2,"0")}:00</text>`).join("")}
+  return `<section class="tl"><div class="tlhead"><h3>Cronología de incidentes</h3><button class="btn" data-tlfit>${state.tlFit?"Ver todo el periodo":"Ajustar a incidentes"}</button></div><div class="tlwrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cronología de incidentes">
+    ${ticks.map(tt=>`<line x1="${x(tt)}" x2="${x(tt)}" y1="${top-6}" y2="${H-4}" stroke="var(--line)"/><text x="${x(tt)}" y="14" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="JetBrains Mono, monospace">${pad(new Date(tt).getHours())}:${pad(new Date(tt).getMinutes())}</text>`).join("")}
     ${lanes.map((i,k)=>{ const y=top+k*lh; const xs=x(i.start.tsDate.getTime()), xe=Math.max(x(i.end.tsDate.getTime()),xs+6);
       return `<g class="lane" data-goinc="${i.id}"><rect x="0" y="${y}" width="${W}" height="${lh}" fill="transparent"/>
         <text x="0" y="${y+19}" font-size="12" fill="var(--fg)"><tspan font-family="JetBrains Mono, monospace" fill="var(--muted)">${i.id}</tspan> ${esc(i.title.length>36?i.title.slice(0,35)+"…":i.title)}</text>

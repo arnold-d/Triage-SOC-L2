@@ -48,7 +48,7 @@ Aceptación:
 - [x] `node tests/test_cliente.js` → 6 incidentes + 2 a validar.
 - [x] `git status` no muestra ni el Excel, ni `sample.local.js`, ni videos.
 
-## [ ] Fase 2.6: Generador sintético y prueba de generalización (día 1, unas 3 h)
+## [x] Fase 2.6: Generador sintético y prueba de generalización (día 1, unas 3 h)
 
 Objetivo: **demostrar con datos que el motor no depende del dataset del cliente.** Es una prueba clave para el video y para GitHub.
 
@@ -79,6 +79,7 @@ Escenarios de ataque. Se insertan al azar entre 3 y 7 por dataset, cada uno con 
 
 Casi-ataques benignos que **no** deben generar incidentes:
 - Usuario que falla la contraseña 2 veces y entra.
+- Usuario interno que falla la contraseña 3–4 veces y entra.
 - Subida pequeña (menos de 50 MB).
 - Tarea programada legítima en `C:\Windows\System32`.
 - Copia de seguridad nocturna legítima.
@@ -97,7 +98,7 @@ Genera N datasets (por defecto 30 semillas) en memoria, ejecuta el motor y compa
 ### Ajuste del motor
 
 Lo más probable es que fallen cosas; para eso sirve la prueba. Puntos que ya sabemos frágiles:
-- Regla "fallos repetidos usuario + IP seguidos de éxito": con IP interna y 3 fallos puede marcar typos legítimos. Valorar umbral distinto para interna y externa.
+- Regla "fallos repetidos usuario + IP seguidos de éxito": con IP interna y 3 fallos puede marcar typos legítimos. Decidido el 02-11-2026: umbral de 5 para IP interna y 3 para IP externa.
 - Persistencia con ruta no sospechosa → hoy crea un hallazgo Medio y, con él, un incidente. Debería quedar "a validar".
 - Lectura masiva de ficheros por una cuenta de copia de seguridad legítima.
 - Detección de texto en inglés (`failed to log on`): apoyarse primero en el Event_ID y luego en el texto.

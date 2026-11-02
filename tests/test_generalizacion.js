@@ -11,6 +11,7 @@ const { generar, aLibro } = require(path.join(root, "tools", "generar_dataset.js
 const semillas = +process.argv.find(a => /^\d+$/.test(a)) || 30;
 const detalle = process.argv.includes("--detalle");
 const SEV = Engine.SEV_RANK;
+const MARGEN_VENTANA_MIN = 90;
 const stats = {}, fallos = [], falsos = [];
 const cuenta = (tipo, acierto) => { const s = stats[tipo] ||= { detectados: 0, insertados: 0 }; s.insertados++; if (acierto) s.detectados++; };
 
@@ -34,6 +35,14 @@ for (let seed = 1; seed <= semillas; seed++) {
       motivo = `sin incidente con todos sus Log_ID clave (parcial: ${parcial.join(" ") || "ninguno"})`;
     } else if (SEV[inc.sev] < SEV[e.sevMin]) motivo = `criticidad ${inc.sev} < ${e.sevMin}`;
     else { const falta = e.categorias.filter(c => !inc.cats.includes(c)); if (falta.length) motivo = `faltan categorías ${falta.join(",")}`; }
+    if (inc && !motivo) {
+      // las señales débiles cercanas pueden ampliar el incidente, pero no estirarlo con actividad ajena;
+      // si dos ataques comparten actor y el motor los une, cuenta la duración de ambos
+      const unidos = t.escenarios.filter(o => o.clave.some(id => inc.evidence.includes(id)));
+      const horas = unidos.flatMap(o => o.clave).map(id => Date.parse(ds.horas.get(id).replace(" ", "T"))).sort((a, b) => a - b);
+      const propia = horas.at(-1) - horas[0], total = inc.end.tsDate - inc.start.tsDate;
+      if (total > propia + MARGEN_VENTANA_MIN * 6e4) motivo = `ventana inflada: ${Math.round(total / 6e4)} min frente a ${Math.round(propia / 6e4)} del ataque`;
+    }
     cuenta(e.tipo, !motivo);
     if (motivo) fallos.push(`semilla ${seed} · ${e.tipo} (${e.actor}): ${motivo}`);
   }

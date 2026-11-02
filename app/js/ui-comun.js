@@ -6,7 +6,7 @@ const SEV_COLOR = {High:"var(--sev-high)",Medium:"var(--sev-med)",Warning:"var(-
 
 const state = {rows:[], file:"", filtered:[], page:0, pageSize:50, sort:{key:"ts",dir:1},
   f:{q:"",sev:new Set(),host:"",user:"",evt:"",logsrc:"",ext:false,cmd:false,flag:false,ids:null,idsLabel:""},
-  analysis:null, view:"registros"};
+  analysis:null, view:"registros", tlFit:false};
 const RISK_COLOR={Crítico:"var(--risk-crit)",Alto:"var(--risk-high)",Medio:"var(--risk-med)",Bajo:"var(--risk-low)"};
 
 const $ = id => document.getElementById(id);

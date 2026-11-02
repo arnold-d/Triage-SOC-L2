@@ -9,15 +9,17 @@ function renderKpis(){
   const fails = R.filter(r=>/fail/i.test(r.result)).length;
   const span = ds.length ? (ds.at(-1)-ds[0]) : 0;
   const h=Math.floor(span/36e5), m=Math.round(span%36e5/6e4);
+  const extIps=[...ext], MAX_IPS=3;
+  const extMas=extIps.length>MAX_IPS?` <button class="linkbtn" id="kpiExtMas">y ${extIps.length-MAX_IPS} más</button>`:"";
   const k=[
     ["Eventos",R.length.toLocaleString("es"),ds.length?`${fmtTs(ds[0]).slice(0,10)}`:""],
     ["Ventana",`${h} h ${m} min`,ds.length?`${fmtTs(ds[0]).slice(11,16)} → ${fmtTs(ds.at(-1)).slice(11,16)}`:""],
     ["Hosts",uniq("host"),""],
     ["Usuarios",uniq("user"),""],
-    ["IP externas",ext.size,[...ext].join(" · ")],
+    ["IP externas",ext.size,extIps.slice(0,MAX_IPS).join(" · "),extMas],
     ["No informativos",nonInfo,`${fails} fallos de resultado`],
   ];
-  $("kpis").innerHTML = k.map(([l,v,s])=>`<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${esc(s)}</span></div>`).join("");
+  $("kpis").innerHTML = k.map(([l,v,s,mas=""])=>`<div class="kpi"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${esc(s)}${mas}</span></div>`).join("");
 }
 
 // ---------- Filtros ----------

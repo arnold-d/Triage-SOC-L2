@@ -24,7 +24,7 @@ function ingest(name, sheetName, header, data){
   if(sinFecha) avisos.push(`${sinFecha} fila(s) con fecha ilegible: se ven en Registros, pero no se analizan.`);
   w.hidden = !avisos.length;
   w.textContent = avisos.join(" ");
-  state.analysis = SOCEngine.analyze(rows);
+  state.analysis = SOCEngine.analyze(rows); state.tlFit = false;
   resetFilters(); buildFilterOptions(); renderKpis(); apply(); renderAnalysis();
   $("tab-analisis").disabled = false;
   $("loader").hidden = true; $("loaded").hidden = false;
@@ -49,7 +49,13 @@ $("idsBanner").addEventListener("click",e=>{ if(e.target.id==="clearIds"){ state
 $("tab-registros").addEventListener("click",()=>setView("registros"));
 $("tab-analisis").addEventListener("click",()=>setView("analisis"));
 $("tbody").addEventListener("click",e=>{ const c=e.target.closest("[data-goinc]"); if(c){ e.stopPropagation(); goIncident(c.dataset.goinc); }},true);
+$("kpis").addEventListener("click",e=>{
+  if(e.target.id!=="kpiExtMas") return;
+  resetFilters(); state.f.ext=true; $("fExt").checked=true; state.sort={key:"ts",dir:1};
+  setView("registros"); apply(); window.scrollTo({top:$("view-registros").offsetTop-70,behavior:"smooth"});
+});
 $("view-analisis").addEventListener("click",e=>{
+  if(e.target.closest("[data-tlfit]")){ state.tlFit=!state.tlFit; renderAnalysis(); return; }
   const ev=e.target.closest("[data-ev]"); if(ev){ const r=state.rows.find(x=>x.id===ev.dataset.ev); if(r) openDetail(r); return; }
   const sh=e.target.closest("[data-show]"); if(sh){ showEvidence(sh.dataset.show); return; }
   const ln=e.target.closest("[data-goinc]"); if(ln){ goIncident(ln.dataset.goinc); }

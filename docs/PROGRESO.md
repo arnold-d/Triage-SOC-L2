@@ -4,20 +4,30 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
 
 ---
 
-## 2026-11-02 · Fase 2.6 (pendiente del visto bueno del usuario)
+## 2026-11-02 · Fase 2.6 (cerrada)
 
 - **Qué cambió**:
-  - `tools/generar_dataset.js`: datasets sintéticos deterministas por semilla, con 8 tipos de escenario, 6 casi-ataques, tres formatos de fecha y verdad de referencia.
-  - `tests/test_generalizacion.js`: cada dataset recorre el camino real (`.xlsx` → parser → motor) y comprueba cobertura, falsos positivos, casi-ataques y la hora exacta de cada fila.
-  - Motor: los hallazgos débiles (inicio fuera de horario, lectura masiva, acceso a recurso sensible, persistencia en ruta normal) solo suman a una señal fuerte del mismo actor; solos quedan "a validar", y los inicios fuera de horario se agrupan en una sola entrada. La conexión saliente aislada baja de Crítico a Alto y el incidente dice "posible exfiltración". Los textos que afirmaban más de lo comprobado ahora dicen lo que los datos permiten.
+  - `tools/generar_dataset.js`: datasets sintéticos deterministas por semilla, con 7 tipos de ataque, nombres parecidos, 7 casi-ataques, tres formatos de fecha y verdad de referencia.
+  - `tests/test_generalizacion.js`: cada dataset recorre el camino real (`.xlsx` → parser → motor) y comprueba cobertura, criticidad, categorías, falsos positivos, casi-ataques, hora exacta de cada fila y que un incidente no quede inflado con actividad ajena.
+  - Motor, señales débiles: inicio fuera de horario, lectura masiva, acceso a recurso sensible y persistencia en ruta normal solo se unen a una señal fuerte del mismo actor a 30 minutos o menos (`weakAttachMin`); solas quedan "a validar", y los inicios fuera de horario se agrupan en una sola entrada.
+  - Motor, fuerza bruta: umbral de 5 fallos para IP interna y 3 para externa (`pairFailMinInternal`, `pairFailMin`). Los fallos se cuentan en una ventana real (`denseBursts`), no encadenados. El éxito de un ataque solo cuenta si la cuenta estaba entre las atacadas.
+  - Motor, exfiltración: la conexión saliente aislada baja de Crítico a Alto y el incidente dice "posible exfiltración". Los textos que afirmaban más de lo comprobado ahora dicen lo que los datos permiten.
   - Parser: lee `dd/mm/aaaa` y fechas nativas de Excel sin desplazar la hora, y avisa en pantalla de las filas con fecha ilegible.
+  - Interfaz: la tarjeta de IP externas muestra el número, hasta 3 IP y un enlace "y N más" que filtra Registros por IP externa; las tarjetas se alinean arriba. La cronología adapta el intervalo a un máximo de 8 etiquetas y tiene un botón "Ajustar a incidentes".
 - **En pantalla**:
-  - Excel del cliente: mismos 6 incidentes y 2 a validar; INC-02 se titula "Intrusión por fuerza bruta con movimiento lateral y posible exfiltración".
-  - `datasets/demo_publico.xlsx` (semilla 21, 1.500 eventos): 7 incidentes para 7 escenarios (4 Críticos, 2 Altos, 1 Medio) y 3 entradas a validar.
+  - Excel del cliente: mismos 6 incidentes y 2 a validar, comprobado en Edge por Claude Code. INC-02 se titula "Intrusión por fuerza bruta con movimiento lateral y posible exfiltración". La frase del usuario sobre este archivo llegó con la plantilla sin rellenar, así que no consta su observación.
+  - `datasets/demo_publico.xlsx` (semilla 445, 1.500 eventos): 7 incidentes para 7 escenarios (4 Críticos, 2 Altos, 1 Medio) y 4 entradas a validar, entre ellas la copia de seguridad y la tarea legítima. El usuario revisó la versión anterior de la demo (semilla 21), que también daba 7 incidentes; esta es nueva porque el generador cambió.
   - Con una fecha ilegible aparece un aviso sobre la franja de resumen.
-- **Pruebas**: antes de los ajustes, 976 incidentes falsos en 22 de 30 semillas y 26 fallos de cobertura. Después, `node tests/test_generalizacion.js` → 100 % de cobertura y 0 incidentes falsos en 30 semillas; también en 300 semillas (270 no usadas al ajustar), antes de añadir la comprobación de casi-ataques, que se ejecutó con 30. `node tests/test_cliente.js` → 6 + 2.
-- **Límites de esta prueba**: el generador escribe los ataques con formas parecidas a las que el motor reconoce, así que demuestra que el motor no depende de los valores del cliente, no que detecte variantes nuevas. El caso de 3 fallos internos seguidos de éxito no se ha cambiado: los casi-ataques solo cubren 2 fallos, y esa regla sigue creando un incidente.
-- **Pendiente**: visto bueno del usuario. Exponer `compromised` en el resultado del motor (fase 3).
+  - A 400 px no hay scroll horizontal, con la tarjeta y la cronología nuevas.
+- **Pruebas**:
+  - Antes de los ajustes: 976 incidentes falsos en 22 de 30 semillas y 26 fallos de cobertura.
+  - `node tests/test_cliente.js` → 6 incidentes (4 Crítico, 2 Alto) + 2 a validar.
+  - `node tests/test_generalizacion.js` → 100 % de cobertura y 0 incidentes falsos en 30 semillas, y también en 300.
+  - Umbral interno: con 3, 26 de 26 casi-ataques de typos caían en un incidente; con 5, ninguno. Siguen detectándose 5 fallos internos y 3 externos.
+  - Con 600 semillas (301–600 no usadas al ajustar): 100 % de cobertura, 263 de 264 casi-ataques de typos fuera de incidentes y 1 incidente falso (semilla 599).
+- **Falso positivo conocido**: la semilla 599 suma 4 typos y 1 fallo de ruido de la misma cuenta e IP en 10 minutos. Cumple el umbral de 5, así que la regla actúa como se definió; no se ha cambiado. A 1.500 eventos pasa con 2 de 209 semillas con typos (226 y 309).
+- **Limitación de la prueba de generalización**: el 100 % no prueba que el motor detecte ataques nuevos. El generador se escribió conociendo las reglas, así que demuestra que el motor no depende de los valores del cliente, no que reconozca variantes distintas.
+- **Pendiente**: exponer `compromised` en el resultado del motor (fase 3). Un ataque lento de fuerza bruta, por debajo de 10 fallos en 15 minutos, no se detecta.
 
 ## 2026-11-02 · Fase 2.5 (cerrada)
 

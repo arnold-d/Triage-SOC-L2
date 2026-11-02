@@ -140,6 +140,11 @@ const CASI = {
       fila(t + 20e3, pc, "4625", u, ip, pc, "Security", "An account failed to log on", "", "Failure", "Informational"),
       fila(t + 45e3, pc, "4624", u, ip, pc, "Security", "An account was successfully logged on", "", "Success", "Informational")];
   },
+  typos_internos(R, E, t, A) {
+    const u = A.persona(), ip = R.pick(E.ips), pc = R.pick(E.pcs), n = R.int(3, 4);
+    const fallos = Array.from({ length: n }, (_, i) => fila(t + i * 25e3, pc, "4625", u, ip, pc, "Security", "An account failed to log on", "", "Failure", "Informational"));
+    return [...fallos, fila(t + n * 25e3, pc, "4624", u, ip, pc, "Security", "An account was successfully logged on", "", "Success", "Informational")];
+  },
   subida_pequena(R, E, t, A) {
     const u = A.persona(), ip = R.pick(E.ips), pc = R.pick(E.pcs), dst = R.pick(DESTINOS_WEB);
     return Array.from({ length: R.int(3, 6) }, (_, i) => fila(t + i * MIN, pc, "PROXY_ACCESS", u, ip, dst, "Proxy", "HTTPS POST outbound", `bytes_out=${R.int(1e6, 7e6)} uri=/upload/${i}`, "Allowed", "Informational"));

@@ -34,6 +34,19 @@ const SOCEngine = (() => {
     }
     return out;
   }
+  // Ventana deslizante real: tramos donde caben al menos min eventos dentro de winMs.
+  function denseBursts(events, winMs, min) {
+    const ev = [...events].sort((a, b) => t(a) - t(b));
+    const hit = new Array(ev.length).fill(false);
+    for (let i = 0, j = 0; i < ev.length; i++) {
+      while (t(ev[i]) - t(ev[j]) > winMs) j++;
+      if (i - j + 1 >= min) hit.fill(true, j, i + 1);
+    }
+    const out = []; let cur = [];
+    ev.forEach((r, i) => { if (hit[i]) cur.push(r); else if (cur.length) { out.push(cur); cur = []; } });
+    if (cur.length) out.push(cur);
+    return out;
+  }
   const groupBy = (rows, keyFn) => {
     const m = new Map();
     for (const r of rows) { const k = keyFn(r); if (k == null || k === "") continue; if (!m.has(k)) m.set(k, []); m.get(k).push(r); }
@@ -43,7 +56,7 @@ const SOCEngine = (() => {
   function analyze(rows, opt = {}) {
     const cfg = Object.assign({
       bruteWindowMin: 15, bruteMin: 10, sprayUsers: 5,   // spraying/fuerza bruta por IP
-      pairFailMin: 3, pairWindowMin: 10,                  // fallos repetidos usuario+IP seguidos de éxito
+      pairFailMin: 3, pairFailMinInternal: 5, pairWindowMin: 10, // fallos repetidos usuario+IP seguidos de éxito (IP externa / interna)
       followMin: 30,                                      // éxito tras ataque
       privAfterMin: 10,                                   // privilegios tras inicio sospechoso
       massAccessMin: 10, massAccessWindowMin: 10,         // acceso masivo a ficheros
@@ -51,7 +64,7 @@ const SOCEngine = (() => {
       beaconMin: 4, beaconJitterSec: 30,                  // ejecución periódica
       webErrMin: 10, webWindowMin: 10,                    // escaneo / abuso web
       workStart: 7, workEnd: 20,                          // horario laboral (inicios fuera de horario)
-      incidentGapMin: 90,
+      incidentGapMin: 90, weakAttachMin: 30,              // agrupación: señales fuertes / señal débil junto a una fuerte
     }, opt);
 
     const R = rows.filter(r => r.tsDate).sort((a, b) => t(a) - t(b));
@@ -62,11 +75,11 @@ const SOCEngine = (() => {
     // ---- 1. Fuerza bruta / password spraying por IP de origen ----
     const fails = R.filter(isFail);
     for (const [src, evs] of groupBy(fails, r => r.src)) {
-      for (const g of bursts(evs, cfg.bruteWindowMin * MIN, cfg.bruteMin)) {
+      for (const g of denseBursts(evs, cfg.bruteWindowMin * MIN, cfg.bruteMin)) {
         const users = uniq(g.map(r => r.user));
         const spray = users.length >= cfg.sprayUsers;
         const end = t(g.at(-1));
-        const succ = R.filter(r => isSuccessLogon(r) && r.src === src && t(r) > t(g[0]) && t(r) - end <= cfg.followMin * MIN);
+        const succ = R.filter(r => isSuccessLogon(r) && r.src === src && users.includes(r.user) && t(r) > t(g[0]) && t(r) - end <= cfg.followMin * MIN);
         const f = add({
           cat: "brute", rule: spray ? "Password spraying" : "Fuerza bruta",
           mitre: spray ? "T1110.003" : "T1110.001",
@@ -75,7 +88,7 @@ const SOCEngine = (() => {
           detail: `${g.length} inicios fallidos desde ${src} entre ${hhmm(g[0])} y ${hhmm(g.at(-1))} contra ${users.length} cuenta(s) (${users.join(", ")}) en ${uniq(g.map(r => r.host)).join(", ")}.`,
           why: succ.length
             ? `El ataque tuvo éxito: ${succ.length} inicio(s) de sesión correcto(s) desde la misma IP justo después (${succ.map(r => r.user + " " + hhmm(r)).join(", ")}).`
-            : `No se observa ningún inicio de sesión correcto desde esa IP tras el ataque.`,
+            : `No se observa ningún inicio de sesión correcto de las cuentas atacadas desde esa IP tras el ataque.`,
           actors: { ips: [src], users: [] }, evidence: g, start: g[0], end: g.at(-1),
         });
         for (const s of succ) compromised.push({ user: s.user, src, row: s, via: f });
@@ -85,7 +98,7 @@ const SOCEngine = (() => {
     for (const [key, evs] of groupBy(fails, r => r.user + "|" + r.src)) {
       const [user, src] = key.split("|");
       if (!src || compromised.some(c => c.src === src)) continue;
-      for (const g of bursts(evs, cfg.pairWindowMin * MIN, cfg.pairFailMin)) {
+      for (const g of denseBursts(evs, cfg.pairWindowMin * MIN, evs[0].ext ? cfg.pairFailMin : cfg.pairFailMinInternal)) {
         const end = t(g.at(-1));
         const succ = R.find(r => isSuccessLogon(r) && r.user === user && r.src === src && t(r) > end && t(r) - end <= cfg.followMin * MIN);
         if (!succ) continue;
@@ -333,9 +346,9 @@ const SOCEngine = (() => {
     const keys = f => [...(f.actors.ips || []).map(x => "ip:" + x), ...(f.actors.users || []).filter(u => u && u !== "-").map(x => "u:" + x.toLowerCase()), ...(f.actors.dsts || []).map(x => "d:" + x)];
     for (let i = 0; i < active.length; i++) for (let j = i + 1; j < active.length; j++) {
       const a = active[i], b = active[j];
-      if (!keys(a).some(k => keys(b).includes(k))) continue;
+      if ((a.weak && b.weak) || !keys(a).some(k => keys(b).includes(k))) continue;
       const gap = Math.max(t(a.start), t(b.start)) - Math.min(t(a.end), t(b.end));
-      if (gap <= cfg.incidentGapMin * MIN) parent[find(i)] = find(j);
+      if (gap <= (a.weak || b.weak ? cfg.weakAttachMin : cfg.incidentGapMin) * MIN) parent[find(i)] = find(j);
     }
     // Enlaces explícitos: cuenta comprometida por un ataque y el propio ataque
     for (const c of compromised) {
