@@ -55,4 +55,4 @@ function readWorkbook(buf, XLSXLib){
   const aoa = XLSXLib.utils.sheet_to_json(sheet,{header:1,defval:"",raw:true});
   return {sheetName:wb.SheetNames[0], aoa};
 }
-if (typeof module !== "undefined") module.exports = { FIELDS, buildRows, readWorkbook };
+if (typeof module !== "undefined") module.exports = { FIELDS, buildRows, readWorkbook, isPrivateIp };

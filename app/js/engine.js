@@ -395,7 +395,8 @@ const SOCEngine = (() => {
     const validations = findings.filter(f => f.needsValidation);
     const flagged = new Map();
     for (const f of findings) for (const id of f.evidence) { if (!flagged.has(id)) flagged.set(id, []); flagged.get(id).push(f.id); }
-    return { findings, incidents, validations, flagged, CAT };
+    const accounts = compromised.map(c => ({ user: c.user, src: c.src, evidence: c.row.id, finding: c.via.id }));
+    return { findings, incidents, validations, flagged, CAT, compromised: accounts };
   }
 
   const IMPACT_WHY = {

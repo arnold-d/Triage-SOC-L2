@@ -26,7 +26,7 @@ function ingest(name, sheetName, header, data){
   w.textContent = avisos.join(" ");
   state.analysis = SOCEngine.analyze(rows); state.tlFit = false;
   resetFilters(); buildFilterOptions(); renderKpis(); apply(); renderAnalysis();
-  $("tab-analisis").disabled = false;
+  $("tab-analisis").disabled = false; $("tab-dashboard").disabled = false;
   $("loader").hidden = true; $("loaded").hidden = false;
   setView(state.analysis.incidents.length ? "analisis" : "registros");
 }
@@ -48,6 +48,12 @@ $("fFlag").addEventListener("change",e=>{state.f.flag=e.target.checked;state.pag
 $("idsBanner").addEventListener("click",e=>{ if(e.target.id==="clearIds"){ state.f.ids=null; state.page=0; apply(); }});
 $("tab-registros").addEventListener("click",()=>setView("registros"));
 $("tab-analisis").addEventListener("click",()=>setView("analisis"));
+$("tab-dashboard").addEventListener("click",()=>setView("dashboard"));
+const dash=$("view-dashboard");
+dash.addEventListener("click",dashClick);
+for(const t of ["pointermove","focusin"]) dash.addEventListener(t,dashTip);
+for(const t of ["pointerleave","focusout"]) dash.addEventListener(t,()=>{$("dtip").hidden=true;});
+new ResizeObserver(()=>{ const h=$("dash-hist"); if(h&&state.view==="dashboard"&&+h.dataset.w!==h.clientWidth) renderHistogram(); }).observe(dash);
 $("tbody").addEventListener("click",e=>{ const c=e.target.closest("[data-goinc]"); if(c){ e.stopPropagation(); goIncident(c.dataset.goinc); }},true);
 $("kpis").addEventListener("click",e=>{
   if(e.target.id!=="kpiExtMas") return;

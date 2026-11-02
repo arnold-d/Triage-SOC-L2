@@ -4,6 +4,24 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
 
 ---
 
+## 2026-11-02 · Fase 3 (pendiente del visto bueno del usuario)
+
+- **Qué cambió**:
+  - Pestaña Dashboard, entre Análisis e Informe, en `js/ui-dashboard.js`, con gráficos en SVG propio.
+  - `js/dashboard-data.js` calcula las cifras solo a partir del resultado del motor; así se prueban en Node y no pueden contradecir a Análisis.
+  - `analyze` devuelve ahora `compromised`. No cambia ningún hallazgo.
+  - `tests/test_dashboard.js`: cuadra las cifras con el motor en el Excel del cliente, la demo y 10 datasets sintéticos.
+- **En pantalla** (para el guion):
+  - Cinco tarjetas: incidentes por criticidad, hallazgos, eventos implicados sobre el total, cuentas comprometidas e IP externas implicadas (origen y destino).
+  - "Qué encontramos": una frase por incidente, generada con plantilla; un clic salta a su tarjeta en Análisis. En la fase 4 se sustituye por la explicación de la IA.
+  - Barras de incidentes por criticidad y de hallazgos por las 6 categorías del reto.
+  - Actividad en el tiempo: columnas apiladas de eventos normales y con incidente, y debajo la franja de cada incidente con su ID. Incluye la vista en tabla.
+  - Top de hosts, cuentas e IP externas, y técnicas MITRE observadas.
+  - Clic en una barra o columna: filtra Registros por esas filas. Clic en una franja: salta al incidente. Tooltip al pasar el ratón o con el foco.
+- **Colores**: la serie principal usa `--chart` y los eventos normales `--chart-base`, separados de la paleta de riesgo. El validador da separación suficiente en ambos temas; el gris no alcanza el mínimo de croma porque es deliberadamente neutro. Los colores de riesgo son de estado, no categóricos: Alto y Medio se parecen con daltonismo (ΔE 3,7), así que siempre llevan su texto.
+- **Pruebas**: `node tests/test_dashboard.js`, `node tests/test_cliente.js` y `node tests/test_generalizacion.js` correctas. En Edge, con el Excel del cliente y 2 sintéticos, en tema claro y oscuro, a 1280 y 400 px: cifras iguales a Análisis, sin scroll horizontal y sin errores de JavaScript. Clics comprobados a 1280 px en tema oscuro.
+- **Pendiente**: visto bueno del usuario.
+
 ## 2026-11-02 · Fase 2.6 (cerrada)
 
 - **Qué cambió**:
@@ -27,7 +45,7 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
   - Con 600 semillas (301–600 no usadas al ajustar): 100 % de cobertura, 263 de 264 casi-ataques de typos fuera de incidentes y 1 incidente falso (semilla 599).
 - **Falso positivo conocido**: la semilla 599 suma 4 typos y 1 fallo de ruido de la misma cuenta e IP en 10 minutos. Cumple el umbral de 5, así que la regla actúa como se definió; no se ha cambiado. A 1.500 eventos pasa con 2 de 209 semillas con typos (226 y 309).
 - **Limitación de la prueba de generalización**: el 100 % no prueba que el motor detecte ataques nuevos. El generador se escribió conociendo las reglas, así que demuestra que el motor no depende de los valores del cliente, no que reconozca variantes distintas.
-- **Pendiente**: exponer `compromised` en el resultado del motor (fase 3). Un ataque lento de fuerza bruta, por debajo de 10 fallos en 15 minutos, no se detecta.
+- **Decisión del usuario** (02-11-2026): visto bueno a la fase tras revisar la demo de la semilla 445 (7 incidentes, 4 a validar, cronología y "Ajustar a incidentes"). Acepta el falso positivo de la semilla 599 y la limitación de ataques lentos: por debajo de 10 fallos en 15 minutos, una fuerza bruta no se detecta.
 
 ## 2026-11-02 · Fase 2.5 (cerrada)
 

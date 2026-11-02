@@ -22,7 +22,7 @@ App web que carga un Excel exportado de un SIEM, detecta y correlaciona incident
 4. **La app funciona completa sin IA** (proveedor `none`, con plantillas).
 5. **Multiplataforma**: debe funcionar igual en Windows y Linux. Usa `path.join` en Node, nada de comandos exclusivos de un shell y archivos siempre en UTF-8.
 6. **Nada sensible en git**: ni el Excel del cliente, ni datos derivados de él (tampoco IPs, cuentas o Log_ID suyos en la documentación), ni claves o tokens, ni la configuración local de IA, ni videos o audios. Lo específico del cliente va en `CLAUDE.local.md` o en `docs/local/`, ambos ignorados por git.
-7. Tras cualquier cambio en el motor, deben pasar **las dos pruebas**: `node tests/test_cliente.js` (6 incidentes y 2 anomalías a validar con el Excel del cliente) y `node tests/test_generalizacion.js` (datasets sintéticos).
+7. Tras cualquier cambio en el motor, deben pasar **las dos pruebas**: `node tests/test_cliente.js` (6 incidentes y 2 anomalías a validar con el Excel del cliente) y `node tests/test_generalizacion.js` (datasets sintéticos). Las cifras del dashboard se comprueban con `node tests/test_dashboard.js`.
 
 ## Arquitectura (sin paso de build)
 
@@ -32,6 +32,7 @@ app/
   css/app.css
   js/engine.js             motor de reglas → SOCEngine.analyze(rows, cfg)
   js/parser.js             lectura del .xlsx y normalización de columnas
+  js/dashboard-data.js     cifras del dashboard a partir del resultado del motor
   js/ui-*.js               pestañas: registros, análisis, dashboard, informe
   js/ai.js                 adaptadores de IA: none, ollama, openai-compatible, anthropic
   js/report.js             informes ejecutivo y técnico + vista de impresión/PDF
@@ -42,6 +43,7 @@ app/
 tools/generar_dataset.js   genera Excel sintéticos + verdad de referencia (.truth.json)
 tests/test_cliente.js      prueba con el Excel del cliente (solo local)
 tests/test_generalizacion.js  N semillas sintéticas: cobertura y falsos positivos
+tests/test_dashboard.js    cuadra las cifras del dashboard con las del motor
 docs/                      PLAN, REQUISITOS, PROGRESO
 legacy/                    versión anterior (fase 1–2) como referencia
 ```

@@ -127,8 +127,8 @@ Pestaña **Dashboard**, entre Análisis e Informe. Gráficos en SVG propio, con 
 - Bloque "Qué encontramos" con una frase por incidente (plantilla). En la fase 4 se sustituye por la explicación de la IA.
 
 Aceptación:
-- [ ] Con el Excel del cliente y con 2 datasets sintéticos, las cifras del dashboard coinciden con las de Análisis.
-- [ ] Sin scroll horizontal a 400 px y legible en tema claro y oscuro.
+- [x] Con el Excel del cliente y con 2 datasets sintéticos, las cifras del dashboard coinciden con las de Análisis.
+- [x] Sin scroll horizontal a 400 px y legible en tema claro y oscuro.
 
 ## [ ] Fase 4: IA independiente del proveedor (día 2, unas 3 h)
 

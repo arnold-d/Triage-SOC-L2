@@ -14,7 +14,7 @@
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" aria-selected="true" id="tab-registros">Registros</button>
     <button class="tab" role="tab" aria-selected="false" id="tab-analisis" disabled>Análisis</button>
-    <button class="tab" role="tab" aria-selected="false" disabled>Dashboard<small>F3</small></button>
+    <button class="tab" role="tab" aria-selected="false" id="tab-dashboard" disabled>Dashboard</button>
     <button class="tab" role="tab" aria-selected="false" disabled>Informe PDF<small>F5</small></button>
   </nav>
 </header>
@@ -57,6 +57,7 @@
       <div class="kpis" id="kpis"></div>
 
       <div id="view-analisis" hidden style="display:grid;gap:18px"></div>
+      <div id="view-dashboard" hidden style="display:grid;gap:18px"></div>
 
       <div class="work" id="view-registros">
         <aside class="filters" aria-label="Filtros">
@@ -112,6 +113,7 @@
 
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" hidden aria-label="Detalle del evento"></aside>
+<div class="dtip" id="dtip" hidden></div>
 
 <script src="vendor/xlsx.full.min.js"></script>
 <!-- Opcionales: si no existen, la app sigue funcionando -->
@@ -122,6 +124,8 @@
 <script src="js/ui-comun.js"></script>
 <script src="js/ui-registros.js"></script>
 <script src="js/ui-analisis.js"></script>
+<script src="js/dashboard-data.js"></script>
+<script src="js/ui-dashboard.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

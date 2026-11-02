@@ -11,14 +11,18 @@ function incChips(id){
 }
 function setView(v){
   state.view=v;
-  $("view-analisis").hidden = v!=="analisis"; $("view-registros").hidden = v!=="registros";
-  $("tab-analisis").setAttribute("aria-selected", v==="analisis"); $("tab-registros").setAttribute("aria-selected", v==="registros");
+  $("view-analisis").hidden = v!=="analisis"; $("view-registros").hidden = v!=="registros"; $("view-dashboard").hidden = v!=="dashboard";
+  for(const n of ["analisis","registros","dashboard"]) $("tab-"+n).setAttribute("aria-selected", v===n);
+  if(v==="dashboard") renderDashboard();
 }
 function goIncident(id){ setView("analisis"); const el=document.getElementById("card-"+id); if(el){ el.scrollIntoView({behavior:"smooth",block:"start"}); } }
 function showEvidence(key){
   const A=state.analysis; let ids, label;
   const inc=A.incidents.find(i=>i.id===key), f=A.findings.find(x=>x.id===key);
   if(inc){ ids=inc.evidence; label=`${inc.id} · ${inc.title}`; } else if(f){ ids=f.evidence; label=`${f.id} · ${f.title}`; } else return;
+  showIds(ids,label);
+}
+function showIds(ids,label){
   resetFilters(); state.f.ids=new Set(ids); state.f.idsLabel=label; state.sort={key:"ts",dir:1};
   setView("registros"); apply(); window.scrollTo({top:$("view-registros").offsetTop-70,behavior:"smooth"});
 }
