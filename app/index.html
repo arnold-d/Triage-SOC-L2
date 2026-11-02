@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Triage SOC L2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><b>Triage SOC L2</b><span>SIEM · análisis de incidentes</span></div>
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" id="tab-registros">Registros</button>
+    <button class="tab" role="tab" aria-selected="false" id="tab-analisis" disabled>Análisis</button>
+    <button class="tab" role="tab" aria-selected="false" disabled>Dashboard<small>F3</small></button>
+    <button class="tab" role="tab" aria-selected="false" disabled>Informe PDF<small>F5</small></button>
+  </nav>
+</header>
+
+<main>
+  <section class="loader" id="loader">
+    <label class="drop" id="drop" for="file">
+      <div class="eyebrow">Paso 1 · Carga del export</div>
+      <h2>Arrastra el Excel exportado del SIEM</h2>
+      <p>Archivo .xlsx con una fila por evento. Se procesa en tu navegador: los registros no salen de este equipo.</p>
+      <span class="btn primary">Seleccionar archivo .xlsx</span>
+      <input type="file" id="file" accept=".xlsx,.xls" hidden>
+      <div class="err" id="loadErr" hidden></div>
+    </label>
+    <div class="brief">
+      <div class="eyebrow">Columnas esperadas</div>
+      <h3>Formato del export SIEM</h3>
+      <ul>
+        <li><span class="mono">Log_ID, Timestamp, Hostname, Event_ID</span></li>
+        <li><span class="mono">User, Source_IP, Destination, Log_Source</span></li>
+        <li><span class="mono">Event_Description, Process_CommandLine</span></li>
+        <li><span class="mono">Result, Severity</span></li>
+      </ul>
+      <p style="margin:0;color:var(--muted);font-size:13px">Si falta alguna columna, la app lo indica y carga el resto.</p>
+      <div><button class="btn" id="loadSample" hidden>Abrir el export del cliente</button></div>
+    </div>
+  </section>
+
+  <section id="loaded" hidden>
+    <div style="display:grid;gap:18px">
+      <div class="filebar">
+        <div style="display:grid;gap:2px;min-width:0">
+          <span class="name" id="fname"></span>
+          <span class="meta" id="fmeta"></span>
+        </div>
+        <div class="sp"></div>
+        <button class="btn" id="reload">Cargar otro archivo</button>
+      </div>
+      <div class="warnings" id="warnings" hidden></div>
+      <div class="kpis" id="kpis"></div>
+
+      <div id="view-analisis" hidden style="display:grid;gap:18px"></div>
+
+      <div class="work" id="view-registros">
+        <aside class="filters" aria-label="Filtros">
+          <div class="fgroup">
+            <label for="q">Buscar</label>
+            <input type="search" id="q" placeholder="IP, usuario, comando, Log_ID…">
+          </div>
+          <div class="fgroup">
+            <span class="lab">Severidad (SIEM)</span>
+            <div class="chips" id="sevChips"></div>
+          </div>
+          <div class="fgroup">
+            <label for="fHost">Host</label>
+            <select id="fHost"></select>
+          </div>
+          <div class="fgroup">
+            <label for="fUser">Usuario</label>
+            <select id="fUser"></select>
+          </div>
+          <div class="fgroup">
+            <label for="fEvt">Event ID</label>
+            <select id="fEvt"></select>
+          </div>
+          <div class="fgroup">
+            <label for="fSrc">Fuente del log</label>
+            <select id="fSrc"></select>
+          </div>
+          <div class="fgroup">
+            <label class="toggle"><input type="checkbox" id="fFlag"> Solo eventos con hallazgos</label>
+            <label class="toggle"><input type="checkbox" id="fExt"> Solo IP de origen externas</label>
+            <label class="toggle"><input type="checkbox" id="fCmd"> Solo con línea de comando</label>
+          </div>
+          <button class="btn" id="clearF">Limpiar filtros</button>
+        </aside>
+
+        <div class="tablewrap">
+          <div class="tablehead">
+            <span class="count" id="count"></span>
+            <span class="idsbanner" id="idsBanner" hidden></span>
+          </div>
+          <div class="scroll">
+            <table>
+              <thead><tr id="thead"></tr></thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+          <div class="pager" id="pager"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="Detalle del evento"></aside>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<!-- Opcionales: si no existen, la app sigue funcionando -->
+<script src="sample.local.js"></script>
+<script src="ai.config.local.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/ui-comun.js"></script>
+<script src="js/ui-registros.js"></script>
+<script src="js/ui-analisis.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

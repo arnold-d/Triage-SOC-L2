@@ -1,0 +1,13 @@
+*.xlsx
+*.mp4
+*.m4a
+*.local.js
+sample.json
+legacy/
+_claude_*
+node_modules/
+datasets/*
+!datasets/demo_publico.xlsx
+CLAUDE.local.md
+docs/local/
+entrega/
