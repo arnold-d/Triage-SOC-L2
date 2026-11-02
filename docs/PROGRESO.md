@@ -4,6 +4,21 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
 
 ---
 
+## 2026-11-02 · Fase 2.6 (pendiente del visto bueno del usuario)
+
+- **Qué cambió**:
+  - `tools/generar_dataset.js`: datasets sintéticos deterministas por semilla, con 8 tipos de escenario, 6 casi-ataques, tres formatos de fecha y verdad de referencia.
+  - `tests/test_generalizacion.js`: cada dataset recorre el camino real (`.xlsx` → parser → motor) y comprueba cobertura, falsos positivos, casi-ataques y la hora exacta de cada fila.
+  - Motor: los hallazgos débiles (inicio fuera de horario, lectura masiva, acceso a recurso sensible, persistencia en ruta normal) solo suman a una señal fuerte del mismo actor; solos quedan "a validar", y los inicios fuera de horario se agrupan en una sola entrada. La conexión saliente aislada baja de Crítico a Alto y el incidente dice "posible exfiltración". Los textos que afirmaban más de lo comprobado ahora dicen lo que los datos permiten.
+  - Parser: lee `dd/mm/aaaa` y fechas nativas de Excel sin desplazar la hora, y avisa en pantalla de las filas con fecha ilegible.
+- **En pantalla**:
+  - Excel del cliente: mismos 6 incidentes y 2 a validar; INC-02 se titula "Intrusión por fuerza bruta con movimiento lateral y posible exfiltración".
+  - `datasets/demo_publico.xlsx` (semilla 21, 1.500 eventos): 7 incidentes para 7 escenarios (4 Críticos, 2 Altos, 1 Medio) y 3 entradas a validar.
+  - Con una fecha ilegible aparece un aviso sobre la franja de resumen.
+- **Pruebas**: antes de los ajustes, 976 incidentes falsos en 22 de 30 semillas y 26 fallos de cobertura. Después, `node tests/test_generalizacion.js` → 100 % de cobertura y 0 incidentes falsos en 30 semillas; también en 300 semillas (270 no usadas al ajustar), antes de añadir la comprobación de casi-ataques, que se ejecutó con 30. `node tests/test_cliente.js` → 6 + 2.
+- **Límites de esta prueba**: el generador escribe los ataques con formas parecidas a las que el motor reconoce, así que demuestra que el motor no depende de los valores del cliente, no que detecte variantes nuevas. El caso de 3 fallos internos seguidos de éxito no se ha cambiado: los casi-ataques solo cubren 2 fallos, y esa regla sigue creando un incidente.
+- **Pendiente**: visto bueno del usuario. Exponer `compromised` en el resultado del motor (fase 3).
+
 ## 2026-11-02 · Fase 2.5 (cerrada)
 
 - **Qué cambió**: repositorio y `.gitignore`; código anterior en `legacy/`; `app/` separada en `index.html`, `css/app.css` y `js/` (`engine`, `parser`, `ui-comun`, `ui-registros`, `ui-analisis`, `app`), sin paso de build. El motor solo cambia en un comentario. El nombre del archivo y el recuento del botón de ejemplo salen ahora de `sample.local.js`. `tests/test_cliente.js` comprueba también las criticidades y que los Log_ID citados existan.

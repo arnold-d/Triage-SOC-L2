@@ -13,14 +13,17 @@ async function loadFile(file){
   }catch(err){ showErr("No se pudo leer el archivo ("+err.message+"). Comprueba que no esté protegido con contraseña."); }
 }
 function ingest(name, sheetName, header, data){
-  const {rows, missing} = buildRows(header, data);
+  const {rows, missing, sinFecha} = buildRows(header, data);
   if(!rows.length){ showErr("No se encontraron eventos en la hoja."); return; }
   state.rows = rows; state.file = name;
   $("fname").textContent = name;
   $("fmeta").textContent = `Hoja «${sheetName}» · ${rows.length.toLocaleString("es")} eventos · ${header.length} columnas`;
   const w=$("warnings");
-  w.hidden = !missing.length;
-  w.textContent = missing.length ? "Columnas no encontradas: "+missing.join(", ")+". El análisis de esos campos quedará vacío." : "";
+  const avisos = [];
+  if(missing.length) avisos.push("Columnas no encontradas: "+missing.join(", ")+". El análisis de esos campos quedará vacío.");
+  if(sinFecha) avisos.push(`${sinFecha} fila(s) con fecha ilegible: se ven en Registros, pero no se analizan.`);
+  w.hidden = !avisos.length;
+  w.textContent = avisos.join(" ");
   state.analysis = SOCEngine.analyze(rows);
   resetFilters(); buildFilterOptions(); renderKpis(); apply(); renderAnalysis();
   $("tab-analisis").disabled = false;

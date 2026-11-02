@@ -108,9 +108,9 @@ Lo más probable es que fallen cosas; para eso sirve la prueba. Puntos que ya sa
 Corregir con reglas genéricas, **nunca** con valores del dataset. Después de cada cambio deben pasar las dos pruebas.
 
 Aceptación:
-- [ ] `node tests/test_generalizacion.js` → 100 % de cobertura en todos los tipos de escenario y 0 incidentes falsos en 30 semillas.
-- [ ] `node tests/test_cliente.js` sigue dando 6 + 2.
-- [ ] Un dataset sintético (`datasets/demo_publico.xlsx`) cargado en la app muestra sus incidentes correctamente. Ese archivo sí puede ir a GitHub como ejemplo público; añadir una excepción al `.gitignore` solo para él.
+- [x] `node tests/test_generalizacion.js` → 100 % de cobertura en todos los tipos de escenario y 0 incidentes falsos en 30 semillas.
+- [x] `node tests/test_cliente.js` sigue dando 6 + 2.
+- [x] Un dataset sintético (`datasets/demo_publico.xlsx`) cargado en la app muestra sus incidentes correctamente. Ese archivo sí puede ir a GitHub como ejemplo público; añadir una excepción al `.gitignore` solo para él.
 
 ## [ ] Fase 3: Dashboard (día 1, unas 2–3 h)
 

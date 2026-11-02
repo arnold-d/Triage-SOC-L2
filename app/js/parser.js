@@ -14,10 +14,17 @@ function isPrivateIp(ip){
 }
 function toDate(v){
   if(v instanceof Date) return v;
-  if(typeof v==="number"){ // serial de Excel
-    return new Date(Math.round((v-25569)*864e5));
+  if(typeof v==="number"){ // serial de Excel: hora tal como se ve en la celda, sin zona horaria
+    const u=new Date(Math.round((v-25569)*864e5));
+    return new Date(u.getUTCFullYear(),u.getUTCMonth(),u.getUTCDate(),u.getUTCHours(),u.getUTCMinutes(),u.getUTCSeconds());
   }
   const s=String(v||"").trim(); if(!s) return null;
+  const m=/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/.exec(s);
+  if(m){ // dd/mm/aaaa; solo se lee como mm/dd si el segundo campo no puede ser un mes
+    const [a,b]=[+m[1],+m[2]], [dia,mes]=b>12?[b,a]:[a,b];
+    if(mes>12||dia>31) return null;
+    return new Date(+m[3],mes-1,dia,+(m[4]||0),+(m[5]||0),+(m[6]||0));
+  }
   const d=new Date(s.replace(" ","T")); return isNaN(d)?null:d;
 }
 const pad=n=>String(n).padStart(2,"0");
@@ -39,11 +46,11 @@ function buildRows(header, data){
     o._hay = [o.id,o.ts,o.host,o.evt,o.user,o.src,o.dst,o.logsrc,o.desc,o.cmd,o.result,o.sev].join(" ").toLowerCase();
     rows.push(o);
   }
-  return {rows, missing};
+  return {rows, missing, sinFecha: rows.filter(r=>!r.tsDate).length};
 }
 
 function readWorkbook(buf, XLSXLib){
-  const wb = XLSXLib.read(buf,{type:"array",cellDates:true});
+  const wb = XLSXLib.read(buf,{type:"array"}); // fechas nativas como serial: toDate las interpreta
   const sheet = wb.Sheets[wb.SheetNames[0]];
   const aoa = XLSXLib.utils.sheet_to_json(sheet,{header:1,defval:"",raw:true});
   return {sheetName:wb.SheetNames[0], aoa};

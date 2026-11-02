@@ -21,7 +21,7 @@ const SOCEngine = (() => {
   const hhmm = r => r.ts.slice(11, 16);
   const uniq = a => [...new Set(a.filter(Boolean))];
 
-  // Ventanas deslizantes: devuelve grupos de eventos (ordenados) donde caben >= min dentro de winMs.
+  // Grupos encadenados: eventos ordenados separados como máximo winMs, con al menos min eventos.
   function bursts(events, winMs, min) {
     const ev = [...events].sort((a, b) => t(a) - t(b));
     const out = []; let i = 0;
@@ -117,7 +117,7 @@ const SOCEngine = (() => {
       });
     }
     for (const r of R.filter(r => isSuccessLogon(r) && r.tsDate && (r.tsDate.getHours() < cfg.workStart || r.tsDate.getHours() >= cfg.workEnd))) {
-      add({ cat: "logon", rule: "Inicio fuera de horario", mitre: "T1078", title: `Inicio fuera de horario: ${r.user}`, sev: "Bajo",
+      add({ cat: "logon", rule: "Inicio fuera de horario", mitre: "T1078", title: `Inicio fuera de horario: ${r.user}`, sev: "Bajo", weak: true,
         detail: `Inicio correcto a las ${hhmm(r)} en ${r.host}.`, why: `Fuera de la franja ${cfg.workStart}:00–${cfg.workEnd}:00.`,
         actors: { ips: [], users: [r.user] }, evidence: [r], start: r, end: r });
     }
@@ -176,10 +176,10 @@ const SOCEngine = (() => {
       const sus = /ProgramData|AppData|\\Temp\\|powershell|\.ps1|cmd\.exe/i.test(r.cmd);
       add({
         cat: "other", rule: r.evt === "4698" ? "Persistencia: tarea programada" : "Persistencia: servicio instalado",
-        mitre: r.evt === "4698" ? "T1053.005" : "T1543.003", sev: sus ? "Alto" : "Medio",
+        mitre: r.evt === "4698" ? "T1053.005" : "T1543.003", sev: sus ? "Alto" : "Medio", weak: !sus,
         title: `${r.evt === "4698" ? "Tarea programada creada" : "Servicio instalado"} en ${r.host}`,
         detail: `${hhmm(r)} · ${r.cmd} (usuario ${r.user}).`,
-        why: sus ? "Ejecuta un script o binario desde una ruta escribible por usuarios y con nombre que imita a Windows Update: patrón de persistencia de malware." : "Nuevo mecanismo de arranque automático; validar con el propietario del equipo.",
+        why: sus ? "Ejecuta un script o intérprete, o un binario en una ruta escribible por usuarios: patrón de persistencia de malware." : "Nuevo mecanismo de arranque automático; validar con el propietario del equipo.",
         actors: { ips: [], users: [r.user] }, evidence: [r], start: r, end: r,
       });
     }
@@ -212,7 +212,7 @@ const SOCEngine = (() => {
         title: `Movimiento lateral de ${r.user}: ${from} → ${r.host}`,
         sev: "Alto",
         detail: `Inicio de red (LogonType=3) en ${r.host} a las ${hhmm(r)} originado en ${from}${prior.length ? `, tras ${prior.length} intento(s) fallido(s)` : ""}.`,
-        why: `La cuenta ${r.user} pasa de un equipo a otro; combinado con el reconocimiento previo indica propagación del atacante.`,
+        why: `La cuenta ${r.user} inicia sesión de red en ${r.host} desde ${from}; es compatible con la propagación de un atacante.`,
         actors: { ips: [], users: [r.user] }, evidence: [...prior, r], start: prior[0] || r, end: r,
       });
     }
@@ -223,10 +223,10 @@ const SOCEngine = (() => {
       for (const g of bursts(evs, cfg.massAccessWindowMin * MIN, cfg.massAccessMin)) {
         const share = uniq(g.map(r => r.dst)).join(", ");
         add({
-          cat: "other", rule: "Acceso masivo a ficheros", mitre: "T1039 / T1005", sev: "Alto",
+          cat: "other", rule: "Acceso masivo a ficheros", mitre: "T1039 / T1005", sev: "Alto", weak: true,
           title: `${g.length} ficheros leídos por ${key} en ${Math.max(1, Math.round((t(g.at(-1)) - t(g[0])) / MIN))} min`,
           detail: `Lectura secuencial de ${g.length} ficheros en ${share || g[0].host} entre ${hhmm(g[0])} y ${hhmm(g.at(-1))}.`,
-          why: "Un patrón automatizado de lectura de documentos indica recolección de datos o cifrado previo por ransomware.",
+          why: "Un patrón automatizado de lectura de documentos puede ser recolección de datos o preparación de un cifrado; también una copia de seguridad legítima si no hay otras señales.",
           actors: { ips: [], users: [key] }, evidence: g, start: g[0], end: g.at(-1),
         });
       }
@@ -235,7 +235,7 @@ const SOCEngine = (() => {
     const SENS = /\\\\[^\\]+\\(Finance|Finanzas|Legal|RRHH|HR|Payroll|Nominas)/i;
     for (const r of R.filter(r => (r.evt === "5140" || r.evt === "5145") && SENS.test(r.dst + " " + r.desc))) {
       add({
-        cat: "other", rule: "Acceso a recurso sensible", mitre: "T1039", sev: "Medio",
+        cat: "other", rule: "Acceso a recurso sensible", mitre: "T1039", sev: "Medio", weak: true,
         title: `${r.user} accede a ${(SENS.exec(r.dst + " " + r.desc) || [""])[0]}`,
         detail: `${hhmm(r)} · ${r.desc} (${r.host}).`,
         why: "Recurso con información confidencial; relevante por su cercanía a otras acciones sospechosas de la misma cuenta.",
@@ -263,10 +263,10 @@ const SOCEngine = (() => {
       const priv = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|127\.)/.test(ip);
       if (priv) continue;
       add({
-        cat: "other", rule: "Conexión saliente de PowerShell", mitre: "T1041 / T1071.001", sev: "Crítico",
+        cat: "other", rule: "Conexión saliente de PowerShell", mitre: "T1041 / T1071.001", sev: "Alto",
         title: `PowerShell conecta con ${r.dst} desde ${r.host}`,
         detail: `${hhmm(r)} · ${r.desc} (usuario ${r.user}).`,
-        why: "Un intérprete de scripts abriendo HTTPS hacia una IP externa poco después de comprimir datos indica exfiltración o canal de control.",
+        why: "Un intérprete de scripts abriendo una conexión hacia una IP externa puede indicar exfiltración o canal de control. Sin bytes salientes registrados no se puede confirmar salida de datos.",
         actors: { ips: [], users: [r.user], dsts: [r.dst] }, evidence: [r], start: r, end: r,
       });
     }
@@ -286,6 +286,11 @@ const SOCEngine = (() => {
       }
     }
     // Nombres parecidos (posible suplantación o error de inventario)
+    const citedText = rows => {
+      const ids = new Set(findings.filter(f => !f.needsValidation).flatMap(f => f.evidence));
+      const n = rows.filter(r => ids.has(r.id)).length;
+      return n ? `${n} aparecen en otros hallazgos` : "ninguno aparece en otros hallazgos";
+    };
     const normName = s => s.toLowerCase().replace(/^.*\\/, "").replace(/[^a-z0-9]/g, "");
     const lookalike = (field, label) => {
       const vals = uniq(R.map(r => r[field]));
@@ -295,9 +300,10 @@ const SOCEngine = (() => {
         const counts = names.map(n => [n, R.filter(r => r[field] === n)]);
         counts.sort((a, b) => a[1].length - b[1].length);
         const [rare, rows] = counts[0];
+        const cited = citedText(rows);
         add({ cat: "other", rule: `${label} con nombre parecido`, mitre: "T1036", sev: "Bajo", needsValidation: true,
           title: `${label} «${rare}» convive con «${counts.slice(1).map(c => c[0]).join("», «")}»`,
-          detail: `${rows.length} eventos con «${rare}» entre ${hhmm(rows[0])} y ${hhmm(rows.at(-1))}; ninguno con acciones sospechosas.`,
+          detail: `${rows.length} eventos con «${rare}» entre ${hhmm(rows[0])} y ${hhmm(rows.at(-1))}; ${cited}.`,
           why: "Puede ser un error de normalización del SIEM o un elemento que imita a uno legítimo. A validar con el inventario del cliente; no se considera incidente.",
           actors: { ips: [], users: [] }, evidence: rows.slice(0, 5), start: rows[0], end: rows.at(-1) });
       }
@@ -308,9 +314,10 @@ const SOCEngine = (() => {
         if (a >= b || ka !== kb || normName(a) === normName(b) || seen.has(a + b)) continue; seen.add(a + b);
         const ra = R.filter(r => r[field] === a), rb = R.filter(r => r[field] === b);
         const [rare, rows, other] = ra.length < rb.length ? [a, ra, b] : [b, rb, a];
+        const cited = citedText(rows);
         add({ cat: "other", rule: `${label} con nombre parecido`, mitre: "T1036", sev: "Bajo", needsValidation: true,
           title: `${label} «${rare}» convive con «${other}»`,
-          detail: `${rows.length} eventos con «${rare}» entre ${hhmm(rows[0])} y ${hhmm(rows.at(-1))}; ninguno con acciones sospechosas.`,
+          detail: `${rows.length} eventos con «${rare}» entre ${hhmm(rows[0])} y ${hhmm(rows.at(-1))}; ${cited}.`,
           why: "Nombre que reordena el de una cuenta de servicio existente. Puede ser legítima o creada para pasar desapercibida. A validar con el directorio del cliente; no se considera incidente.",
           actors: { ips: [], users: [] }, evidence: rows.slice(0, 5), start: rows[0], end: rows.at(-1) });
       }
@@ -338,7 +345,22 @@ const SOCEngine = (() => {
     // Webshell: shell de IIS y ataque web desde la misma IP
     const groups = new Map();
     active.forEach((f, i) => { const r = find(i); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(f); });
-    const incidents = [...groups.values()].map(fs => {
+    // Sin una señal fuerte del mismo actor, los hallazgos débiles quedan a validar y no forman incidente
+    const weakGroups = [...groups.values()].filter(fs => fs.every(f => f.weak));
+    for (const fs of weakGroups) for (const f of fs) f.needsValidation = true;
+    const offHours = weakGroups.flat().filter(f => f.rule === "Inicio fuera de horario");
+    if (offHours.length) {
+      const offUsers = uniq(offHours.flatMap(f => f.actors.users));
+      const sorted = [...offHours].sort((a, b) => t(a.start) - t(b.start));
+      const merged = { ...sorted[0], id: "", title: `${offHours.length} inicio(s) fuera de horario de ${offUsers.length} cuenta(s)`,
+        detail: `Entre ${hhmm(sorted[0].start)} y ${hhmm(sorted.at(-1).end)}, sin otras señales de las mismas cuentas.`,
+        why: `Fuera de la franja ${cfg.workStart}:00–${cfg.workEnd}:00. A validar con los horarios del cliente; no se considera incidente.`,
+        evidence: uniq(sorted.flatMap(f => f.evidence)).slice(0, 5), end: sorted.at(-1).end };
+      for (const f of offHours) findings.splice(findings.indexOf(f), 1);
+      findings.push(merged);
+    }
+    findings.forEach((f, i) => f.id = "H-" + String(i + 1).padStart(2, "0"));
+    const incidents = [...groups.values()].filter(fs => !fs.every(f => f.weak)).map(fs => {
       fs.sort((a, b) => t(a.start) - t(b.start));
       const sev = fs.reduce((m, f) => SEV_RANK[f.sev] > SEV_RANK[m] ? f.sev : m, "Bajo");
       const ev = uniq(fs.flatMap(f => f.evidence));
@@ -374,7 +396,11 @@ const SOCEngine = (() => {
     const has = s => [...r].some(x => x.includes(s));
     if (has("Shell lanzada por el servidor web")) return "Compromiso del servidor web mediante webshell";
     if (has("Borrado de instantáneas")) return "Actividad preparatoria de ransomware";
-    if (has("Fuerza bruta con éxito") && (has("Salto") || has("Conexión saliente"))) return "Intrusión por fuerza bruta con movimiento lateral y exfiltración";
+    if (has("Fuerza bruta con éxito") && has("Salto")) {
+      const exfil = has("Exfiltración de datos") ? " y exfiltración" : has("Conexión saliente") ? " y posible exfiltración" : "";
+      return "Intrusión por fuerza bruta con movimiento lateral" + exfil;
+    }
+    if (has("Fuerza bruta con éxito") && has("Conexión saliente")) return "Intrusión por fuerza bruta y posible exfiltración";
     if (has("Exfiltración")) return "Exfiltración de información";
     if (has("Persistencia") || has("beacon")) return "Persistencia de malware en servidor";
     if (has("Password spraying")) return r.size > 1 ? "Password spraying con compromiso de cuenta" : "Password spraying";
