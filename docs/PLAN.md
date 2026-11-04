@@ -194,7 +194,7 @@ Aceptación (desde el zip descomprimido, en una ruta con espacios y tildes, sin 
 
 ## [ ] Fase 7: Repositorio listo para GitHub (día 2, unas 1 h)
 
-**Preparada el 04-11-2026, sin publicar.** README final, captura con `demo_publico.xlsx`, revisión de todo el historial (todos los commits y objetos). El usuario publica desde VS Code como repositorio **privado** y crea el Release v1.0 con el zip y su SHA-256.
+**Preparada el 04-11-2026, sin publicar.** README final, captura con `demo_publico.xlsx`, revisión de todo el historial (todos los commits y objetos). El usuario publica desde VS Code como repositorio **privado** y crea el Release v1.1 con el zip y su SHA-256 (v1.0 no llegó a publicarse: tenía el resumen ejecutivo duplicado).
 
 - `README.md`: qué hace, captura del dashboard, cómo usarla (abrir `index.html`), cómo conectar una IA (cada proveedor) y "en el entorno de pruebas del autor se usó Ollama con el modelo X", cómo ejecutar las pruebas y el generador, arquitectura y principios (reglas deterministas + IA validada). Enlaces al video y al PDF, que pone el usuario.
 - Licencia: MIT (decidida en la fase 6). Publicar el zip de la fase 6 como Release con su SHA-256.

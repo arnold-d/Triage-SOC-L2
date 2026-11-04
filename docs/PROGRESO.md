@@ -10,7 +10,8 @@ Tras revisar el PDF combinado, el usuario detectó dos fallos:
 - **Resumen duplicado**: "Qué pasó" (ejecutivo) y la sección 1 del técnico mostraban el párrafo de plantilla y, debajo, el de IA, casi iguales. Ahora, si hay resumen de IA, sustituye al de plantilla; si no, se usa la plantilla. Nunca salen los dos. En la pestaña Informe hay un botón "Usar la plantilla en su lugar" para descartar el de IA.
 - **Etiqueta engañosa**: el resumen de IA decía "0 citas verificadas, 0 no encontradas", porque no cita Log_ID. Ahora dice "cifras comprobadas con el motor" (o "cifras no comprobadas en los datos del motor" si la comprobación falla).
 - Pruebas: `test_pdf` comprueba en cada dataset que hay un solo resumen, que no dice "0 citas" y que lleva la etiqueta de cifras (214 de 214). Las demás siguen en verde.
-- PDF finales regenerados en `entrega/` y zip `triage-soc-l2-v1.1.zip` con su SHA-256.
+- PDF finales regenerados en `entrega/` sin llamar a la IA (mismos textos revisados y la misma edición de INC-05), sin nombre de cliente: ejecutivo 2 páginas, técnico 17 y combinado 19. En el texto de los PDF: 0 párrafos de plantilla del resumen, un resumen de IA por informe con "cifras comprobadas con el motor", ningún "0 citas verificadas"; los 99 Log_ID existen.
+- Zip `entrega/triage-soc-l2-v1.1.zip`, 30 archivos, 1.417 KB, SHA-256 `6cf7774c2d0fa8a30d787de010fb6890d9fc639adff1b7f37223fd7c7474ba7c`. Matriz repetida desde el zip descomprimido en una ruta con espacios y tildes: Edge y Chrome iguales que en v1.0, sin errores de JavaScript; revisión contra el Excel del cliente: 0 coincidencias. El zip v1.0 no se publica.
 
 ## 2026-11-04 · Fase 7: repositorio preparado (sin publicar)
 
@@ -20,7 +21,7 @@ Tras revisar el PDF combinado, el usuario detectó dos fallos:
   - Claves: la clave de `ai.config.local.js` (cargada sin imprimirla) no aparece en ningún objeto, y no hay patrones de clave (`sk-ant-`, `sk-`, `AKIA`, `ghp_`).
   - Archivos grandes: ninguno supera 1 MB (los mayores son las librerías de `vendor/` y la demo, de 0,8 a 0,95 MB). El repositorio ocupa unos 2 MB.
   - Rutas: ningún `.local`, `CLAUDE.local.md`, video, audio, `entrega/` ni `legacy/` en ningún commit. Autor y committer de todos los commits: `arnold_d` con el correo noreply de GitHub.
-- **Pendiente**: el usuario publica el repositorio privado y crea el Release v1.0; rellenar los enlaces del README.
+- **Pendiente**: el usuario publica el repositorio privado y crea el Release v1.1; rellenar los enlaces del README.
 
 ## 2026-11-04 · Fase 5 cerrada: PDF finales
 
