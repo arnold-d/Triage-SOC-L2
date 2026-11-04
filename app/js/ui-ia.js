@@ -2,12 +2,25 @@
 const AI_KEY = "soc-triage.ai";
 state.ai = { cfg: { ...SOCAI.DEFAULTS }, status: "", detail: "", found: [], explain: new Map(), suggest: null, batch: null };
 
+// Prioridad: lo guardado en este navegador, luego app/ai.config.local.js, luego sin IA
 function aiLoadConfig() {
-  let saved = {};
-  try { saved = JSON.parse(localStorage.getItem(AI_KEY) || "{}"); } catch { saved = {}; }
-  state.ai.cfg = { ...SOCAI.DEFAULTS, ...(window.SOC_AI_CONFIG || {}), ...saved };
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(AI_KEY) || "null"); } catch { saved = null; }
+  state.ai.cfg = { ...SOCAI.DEFAULTS, ...(window.SOC_AI_CONFIG || {}), ...(saved || {}) };
+  state.ai.source = saved ? "browser" : window.SOC_AI_CONFIG ? "file" : "default";
 }
-function aiSaveConfig() { try { localStorage.setItem(AI_KEY, JSON.stringify(state.ai.cfg)); } catch { /* sin almacenamiento: vale solo para esta sesión */ } }
+const AI_SOURCE = { browser: "guardada en este navegador", file: "archivo ai.config.local.js", default: "valores por defecto (sin IA)" };
+function aiResetConfig() {
+  try { localStorage.removeItem(AI_KEY); } catch { /* nada guardado */ }
+  aiLoadConfig(); state.ai.status = ""; state.ai.detail = ""; state.ai.found = [];
+  aiChanged(false); renderAIPanel();
+}
+// La clave que viene de ai.config.local.js no se copia al navegador: se guarda solo si la escribió el usuario aquí
+function aiSaveConfig() {
+  const cfg = { ...state.ai.cfg };
+  if (window.SOC_AI_CONFIG?.apiKey && cfg.apiKey === window.SOC_AI_CONFIG.apiKey) delete cfg.apiKey;
+  try { localStorage.setItem(AI_KEY, JSON.stringify(cfg)); } catch { /* sin almacenamiento: vale solo para esta sesión */ }
+}
 const aiOn = () => state.ai.cfg.provider !== "none";
 // Con doble clic (file://) la página envía Origin: null y Ollama la rechaza; ver tools/servir.js
 const AI_FILE_MSG = "Para usar Ollama, abre la app con iniciar (iniciar.bat en Windows, iniciar.sh en Linux y macOS).";
@@ -52,18 +65,23 @@ function renderAIPanel() {
   $("aiPanel").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:start;gap:10px">
       <div><div class="eyebrow">Configuración</div><h3>Ajustes de IA</h3></div><button class="btn" id="aiClose">Cerrar</button></div>
     <p class="dnote">La IA explica y redacta. Los incidentes y su criticidad los deciden siempre las reglas, y cada cita se comprueba contra el archivo cargado.</p>
+    <div class="ai-source"><span>Configuración activa: <b>${AI_SOURCE[state.ai.source]}</b></span>${state.ai.source === "browser" ? `<button class="btn" id="aiReset">Restablecer</button>` : ""}</div>
+    ${state.ai.source === "browser" ? `<p class="dnote">Restablecer borra lo guardado en este navegador y vuelve a ${window.SOC_AI_CONFIG ? "la del archivo ai.config.local.js" : "los valores por defecto"}.</p>` : ""}
     <div class="fgroup"><label for="aiProvider">Proveedor</label><select id="aiProvider">${Object.entries(AI_NAMES).map(([v, n]) => `<option value="${v}" ${v === cfg.provider ? "selected" : ""}>${n}</option>`).join("")}</select></div>
     ${on ? `<div class="fgroup"><label for="aiUrl">URL base</label><input type="search" id="aiUrl" value="${esc(cfg.baseUrl)}" placeholder="${esc(SOCAI.BASE_URL[cfg.provider] || "https://servidor/v1")}" autocomplete="off"></div>
     <div class="fgroup"><label for="aiModel">Modelo</label><input type="search" id="aiModel" list="aiModels" value="${esc(cfg.model)}" placeholder="${cfg.provider === "anthropic" ? SOCAI.ANTHROPIC_MODEL : ""}" autocomplete="off"><datalist id="aiModels">${found.map(m => `<option value="${esc(m)}">`).join("")}</datalist></div>
     ${key ? `<div class="fgroup"><label for="aiKey">Clave de API</label><input type="password" id="aiKey" value="${esc(cfg.apiKey)}" autocomplete="off"><span class="dnote">Se guarda sin cifrar en este navegador. Úsala solo en un equipo de confianza.</span></div>` : ""}
     ${aiBlocked() ? `<p class="ai-warn">${AI_FILE_MSG}</p>` : `<div><button class="btn primary" id="aiTest">Probar conexión</button></div>
     <div class="ai-status ${status}" role="status">${esc(detail)}</div>`}
+    <label class="toggle"><input type="checkbox" id="aiAuto" ${cfg.autoExplain ? "checked" : ""}> Explicar los incidentes en segundo plano al cargar un archivo</label>
+    <span class="dnote">Usa la GPU mientras trabajas; si vas a grabar, déjalo desactivado y genera las explicaciones antes.</span>
     ${SOCAI.isLocal(cfg) ? "" : `<p class="ai-warn">Con esta configuración, las filas de evidencia salen de este equipo y se envían a ${esc(aiHost())}.</p>`}` : `<p class="dnote">La app funciona entera sin IA, con plantillas.</p>`}`;
 }
 function aiOpen() { renderAIPanel(); $("aiPanel").hidden = false; $("scrim").hidden = false; }
 function aiClose() { $("aiPanel").hidden = true; }
-function aiChanged() {
-  aiSaveConfig(); aiPrivacy();
+function aiChanged(save = true) {
+  if (save) { aiSaveConfig(); state.ai.source = "browser"; }
+  aiPrivacy();
   if (state.analysis) renderAnalysis();
   if (state.view === "dashboard") renderDashboard();
 }
@@ -89,12 +107,15 @@ function aiPanelInput(e) {
   if (id === "aiUrl") c.baseUrl = e.target.value.trim();
   else if (id === "aiModel") c.model = e.target.value.trim();
   else if (id === "aiKey") c.apiKey = e.target.value.trim();
+  else if (id === "aiAuto") c.autoExplain = e.target.checked;
   else return;
   aiChanged();
+  renderAIPanel(); // el origen pasa a "guardada en este navegador" y aparece Restablecer
 }
 function aiPanelClick(e) {
   if (e.target.id === "aiClose") { aiClose(); $("scrim").hidden = true; }
   if (e.target.id === "aiTest") aiTest();
+  if (e.target.id === "aiReset") aiResetConfig();
 }
 
 // ---------- Citas ----------
@@ -127,22 +148,34 @@ function aiBlock(id) {
   if (!aiOn() || aiBlocked()) return "";
   const e = state.ai.explain.get(id);
   if (!e) return `<button class="linkbtn" data-ai-explain="${id}">Explicar con IA</button>`;
-  if (e.status === "loading") return `<span class="dnote">Generando explicación…</span> <button class="linkbtn" data-ai-stop="${id}">Cancelar</button>`;
+  if (e.status === "queued") return `<span class="dnote">En cola: la IA atiende una petición cada vez.</span> <button class="linkbtn" data-ai-stop="${id}">Cancelar</button>`;
+  if (e.status === "loading") return `<div class="ai-text live"><div class="ai-head"><span class="tag">IA · generando</span><span class="dnote">${e.partial ? "Escribiendo…" : "Leyendo la evidencia…"}</span><button class="linkbtn" data-ai-stop="${id}">Cancelar</button></div><p class="ai-live">${esc(e.partial || "")}</p></div>`;
   if (e.status === "error") return `<div class="ai-err">${esc(e.message)} Se mantienen los hallazgos de las reglas. <button class="linkbtn" data-ai-explain="${id}">Reintentar</button></div>`;
   return `<div class="ai-text"><div class="ai-head"><span class="tag">IA · ${esc(e.model)}</span>${citeSummary(e.cit)}<button class="linkbtn" data-ai-explain="${id}">Regenerar</button></div>${citedHTML(e.text, e.cit)}</div>`;
+}
+// Mientras llega el texto solo se actualiza el párrafo, sin rehacer la tarjeta ni el dashboard
+function aiLive(id, text) {
+  const el = document.querySelector(`#ai-${id} .ai-live`);
+  if (!el) return aiPaint(id);
+  el.textContent = text;
+  const hint = document.querySelector(`#ai-${id} .ai-head .dnote`); if (hint) hint.textContent = "Escribiendo…";
 }
 function aiPaint(id) {
   const el = $("ai-" + id); if (el) el.innerHTML = aiBlock(id);
   aiToolbarPaint();
   if (state.view === "dashboard") renderDashboard();
+  if (state.view === "informe" && !["loading", "queued"].includes(state.ai.explain.get(id)?.status)) renderInforme();
 }
 async function aiExplain(id, signal) {
   const inc = state.analysis.incidents.find(i => i.id === id); if (!inc) return;
   const ctl = new AbortController(), cfg = state.ai.cfg;
   signal?.addEventListener("abort", () => ctl.abort());
-  state.ai.explain.set(id, { status: "loading", ctl }); aiPaint(id);
+  const entry = { status: "queued", ctl };
+  state.ai.explain.set(id, entry); aiPaint(id);
   try {
-    const text = await SOCAI.chat(cfg, SOCAI.explainMessages(inc, state.rows), { signal: ctl.signal });
+    const text = await SOCAI.chat(cfg, SOCAI.explainMessages(inc, state.rows), { signal: ctl.signal,
+      onStart: () => { entry.status = "loading"; aiPaint(id); },
+      onToken: t => { entry.partial = t; aiLive(id, t); } });
     state.ai.explain.set(id, { status: "done", text, model: cfg.model || cfg.provider, cit: SOCAI.citations(text, state.rows, inc.evidence) });
   } catch (e) {
     if (e.code === "cancelled") state.ai.explain.delete(id);
@@ -169,7 +202,7 @@ function aiToolbarPaint() {
   if (aiBlocked()) { el.innerHTML = `<p class="ai-warn">${AI_FILE_MSG}</p>`; return; }
   const T = aiTotals(), total = state.analysis.incidents.length, busy = !!state.ai.batch;
   el.innerHTML = `${total ? (busy ? `<button class="btn" data-ai-stopall>Cancelar</button>` : `<button class="btn" data-ai-all>Explicar ${total > 1 ? `los ${total} incidentes` : "el incidente"} con IA</button>`) : ""}
-    <button class="btn" data-ai-suggest ${state.ai.suggest?.status === "loading" ? "disabled" : ""}>Sugerencias del analista IA</button>
+    <button class="btn" data-ai-suggest ${["loading", "queued"].includes(state.ai.suggest?.status) ? "disabled" : ""}>Sugerencias del analista IA</button>
     ${T.done ? `<span class="dnote">${T.done} de ${total} explicados · ${T.verified} citas verificadas / ${T.bad} no válidas</span>` : ""}`;
 }
 
@@ -178,22 +211,26 @@ function aiSuggestBlock() {
   const s = state.ai.suggest;
   if (!aiOn() || !s) return "";
   const head = `<div class="eyebrow" style="color:var(--risk-low)">Sugerencia de la IA, no verificada por reglas</div>`;
-  if (s.status === "loading") return `${head}<span class="dnote">Revisando los eventos no marcados…</span>`;
+  if (s.status === "queued") return `${head}<span class="dnote">En cola: la IA atiende una petición cada vez.</span>`;
+  if (s.status === "loading") return `${head}<div class="ai-text live"><span class="dnote">${s.partial ? "Escribiendo…" : "Revisando los eventos no marcados…"}</span><p class="ai-live">${esc(s.partial || "")}</p></div>`;
   if (s.status === "error") return `${head}<div class="ai-err">${esc(s.message)}</div>`;
   return `${head}<div class="ai-text"><div class="ai-head"><span class="tag">IA · ${esc(s.model)}</span>${citeSummary(s.cit)}</div>${citedHTML(s.text, s.cit)}</div>`;
 }
 async function aiSuggest() {
   const ctl = new AbortController(), cfg = state.ai.cfg;
-  state.ai.suggest = { status: "loading", ctl };
+  const entry = state.ai.suggest = { status: "queued", ctl };
   const paint = () => { const el = $("aiSuggest"); if (el) { el.innerHTML = aiSuggestBlock(); el.hidden = !state.ai.suggest; } aiToolbarPaint(); };
   paint();
   try {
-    const text = await SOCAI.chat(cfg, SOCAI.suggestMessages(state.rows, state.analysis), { signal: ctl.signal });
+    const text = await SOCAI.chat(cfg, SOCAI.suggestMessages(state.rows, state.analysis), { signal: ctl.signal,
+      onStart: () => { entry.status = "loading"; paint(); },
+      onToken: t => { entry.partial = t; const el = document.querySelector("#aiSuggest .ai-live"); if (el) el.textContent = t; else paint(); } });
     state.ai.suggest = { status: "done", text, model: cfg.model || cfg.provider, cit: SOCAI.citations(text, state.rows) };
   } catch (e) {
     state.ai.suggest = e.code === "cancelled" ? null : { status: "error", message: e.message };
   }
   aiStore(); paint();
+  if (state.view === "informe") renderInforme();
 }
 function aiClick(e) {
   const t = e.target.closest("[data-ai-explain],[data-ai-stop],[data-ai-all],[data-ai-stopall],[data-ai-suggest],[data-ai-open]"); if (!t) return;

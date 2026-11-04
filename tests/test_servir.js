@@ -23,6 +23,11 @@ const esperar = p => new Promise(ok => p.on("exit", c => ok(c)));
   check("sirve index.html con su tipo", i.code === 200 && /text\/html/.test(i.tipo) && /<!doctype html>/i.test(i.body));
   check("sirve js y css con su tipo", /javascript/.test((await pedir("/js/engine.js")).tipo) && /text\/css/.test((await pedir("/css/app.css")).tipo));
   check("archivo inexistente", (await pedir("/no-existe.js")).code === 404);
+  const opcional = await pedir("/no-existe.local.js");
+  check("un .local.js que falta responde con un script vacío", opcional.code === 200 && /javascript/.test(opcional.tipo) && /es opcional/.test(opcional.body));
+  // tests/test_citas_cliente.local.js existe fuera de app/: nunca debe servirse su contenido
+  const fuera = await Promise.all(["/../tests/test_citas_cliente.local.js", "/%2e%2e/tests/test_citas_cliente.local.js", "/..%2ftests%2ftest_citas_cliente.local.js"].map(r => pedir(r)));
+  check("no sirve un .local.js de fuera de app/", fuera.every(r => !/Solo local/.test(r.body)), fuera.map(r => r.code).join());
   check("no sale de app/ con ..", ![200].includes((await pedir("/../CLAUDE.md")).code));
   check("no sale de app/ con codificación", (await pedir("/%2e%2e/CLAUDE.md")).code !== 200 && (await pedir("/..%2fCLAUDE.md")).code !== 200 && (await pedir("/..%5cCLAUDE.md")).code !== 200);
   check("no sirve el Excel de la raíz", (await pedir("/%2e%2e/SOC_L2.xlsx")).code !== 200);

@@ -4,7 +4,34 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
 
 ---
 
-## 2026-11-02 · Fase 4 (pendiente del visto bueno del usuario)
+## 2026-11-04 · Fase 5: informes en PDF (pendiente del visto bueno del usuario)
+
+- **Para grabar**: abre `app/index.html` con doble clic (con Anthropic no hace falta `iniciar`); en Ajustes de IA comprueba que la configuración activa es "archivo ai.config.local.js" y pulsa "Probar conexión"; genera las explicaciones y el resumen ejecutivo **antes** de grabar, porque se guardan durante la sesión del navegador; en la pestaña Informe escribe analista y cliente, marca "Revisado por el analista" y descarga los dos PDF.
+- **Decisión del usuario**: las antiguas fases 5 (informes) y 6 (PDF) se fusionan. Los informes son archivos PDF generados en el navegador, sin diálogo de impresión.
+- **Qué cambió**:
+  - `js/report.js`: contenido de ambos informes solo a partir del motor. Ejecutivo: qué pasó, riesgo global, impacto, tabla de incidentes y hasta 5 decisiones. Técnico: las 8 secciones del reto y el anexo de metodología con los umbrales reales del motor. Planes de acción, impacto y decisiones son plantillas por tipo de incidente (webshell, ransomware, intrusión, exfiltración, persistencia, spraying, fuerza bruta, acceso externo) rellenadas con cuentas, equipos e IP reales.
+  - Resumen ejecutivo con IA: una llamada con los hechos del motor, sin filas de log. Se comprueba que sus cifras y sus INC-xx estén en esos hechos. El técnico reutiliza las explicaciones guardadas.
+  - `js/ui-informe.js`: pestaña Informe con analista, cliente y fecha, texto editable (las tablas del motor no), textos de IA marcados y revalidados al editarlos, y una franja que comprueba que todo Log_ID del informe exista.
+  - "Revisado por el analista" exige el nombre y aparece en la portada; sin ello no se descarga. Los botones también esperan a que la IA termine: en una prueba, un PDF descargado mientras se redactaba el resumen salió sin él.
+  - `js/pdf.js` con **pdfmake 0.3.12** en `vendor/` (MIT, publicada el 17-10-2026; la 0.3.13 tenía 10 días y se descartó). Integridad verificada contra el registro de npm. SHA-256: `pdfmake.min.js` `d69c826c…`, `vfs_fonts.js` `1483ed26…`. Elegida frente a jsPDF por sus tablas (cabecera repetida y salto de página) y porque incluye la fuente Roboto con tildes y eñes.
+  - Roboto no tiene `→`, `←`, `✓` ni `⚠` (comprobado en su tabla de caracteres): `pdf.js` los sustituye y una prueba verifica que todo carácter de los PDF existe en la fuente.
+- **En pantalla y en el PDF**: con el Excel del cliente, el ejecutivo ocupa 2 páginas y el técnico unas 17. Portada con cliente, fecha, analista, revisión y fuente; tablas con cabecera repetida; textos de IA con una barra naranja y la etiqueta "TEXTO DE IA · modelo · revisado por…".
+- **Pruebas**: `test_informe` 388 de 388 (cliente, demo y 30 semillas); `test_pdf` 160 de 160 (PDF generados en Node, caracteres en la fuente, todos los Log_ID del informe presentes y existentes). En Edge con Anthropic real: los 84 Log_ID del informe existen, los botones se activan al revisar y los dos PDF se descargaron. Contra un servidor simulado: 9 peticiones lanzadas a la vez se atendieron de una en una.
+- **Coste de la prueba con Anthropic** (`claude-haiku-5-5`, 0,10 $ por millón de tokens de entrada y 0,50 $ de salida): 10 llamadas (6 explicaciones, 1 sugerencia, 1 resumen ejecutivo y 2 explicaciones sueltas), 29.147 tokens de entrada y 23.658 de salida, unos **0,015 $** en total. La mayor parte de la salida es razonamiento interno del modelo: unos 2.000 tokens por llamada para 100–150 palabras visibles.
+- **Pendiente**: visto bueno del usuario. Probar los PDF en Linux. Generar los PDF finales en `entrega/`.
+
+## 2026-11-02 · Fase 4 (cerrada)
+
+- **04-11-2026 · Problemas del visto bueno parcial**:
+  - Consola: los `*.local.js` que faltan devolvían 404 en texto plano. `servir.js` responde ahora con un script vacío de tipo JavaScript. Para que lo use, hay que cerrar y volver a abrir `iniciar` si estaba en marcha.
+  - Ajustes de IA indica de dónde sale la configuración ("archivo ai.config.local.js", "guardada en este navegador" o valores por defecto) y tiene un botón **Restablecer** que borra lo guardado en el navegador. La clave que viene del archivo no se copia al navegador y se muestra oculta.
+  - INC-06 sin respuesta en 180 s: el log de Ollama muestra que el modelo procesaba el prompt a 12–17 tokens/s (unas 20 veces más lento de lo normal) con 1,0 GiB de VRAM y 3,7 GiB de RAM libres, mientras se grababa; en 3 minutos no terminó de leer el prompt. Además se cargaron dos modelos distintos en 20 s, señal de dos configuraciones a la vez.
+  - Streaming en los tres proveedores (NDJSON en Ollama, SSE en los demás): el texto aparece mientras se genera. Límite por inactividad: hasta 5 minutos para el primer fragmento, porque mientras el modelo lee el prompt no envía nada, y 60 s sin texto después. Una sola petición a la vez para toda la app, con estado "En cola" y cancelación. Evidencia por incidente: 30 filas como máximo (antes 40).
+  - Opción "Explicar los incidentes en segundo plano al cargar un archivo", desactivada por defecto porque usa la IA mientras se trabaja o se graba.
+- **04-11-2026 · Medición de `qwen2.5:3b` frente a `qwen2.5:7b`** (6 incidentes y una sugerencia, código actual):
+  - `qwen2.5:3b`: unos 60 tokens/s, 10–19 s por respuesta, primer token en 5–14 s, todo en GPU. Pero solo 9 citas en total y 5 de 7 respuestas sin ninguna: no cumple la regla de citar.
+  - `qwen2.5:7b`: medición no válida. Con la GPU ocupada fue a 1,5 tokens/s (primer token en 93 y 222 s) y Ollama se apagó a las 10:51. En INC-02 saltó el límite de 60 s sin texto, como estaba previsto.
+- **Decisión del usuario (04-11-2026)**: Ollama no es viable en este equipo. La IA pasa a Anthropic con `claude-haiku-5-5` por API; Ollama queda como adaptador opcional. Prueba real: funciona abierta con doble clic y con `iniciar`, así que el lanzador solo hace falta para Ollama. Los 6 incidentes se explicaron en 84 s con 57 citas verificadas y 0 no válidas; la sugerencia dio 14 verificadas y 2 con datos que no coinciden, marcadas.
 
 - **Entorno del autor**: Ollama 0.40.13 instalado con winget. GTX 1660 Super de 6 GB, con unos 2 GB en uso por otros programas; el modelo elegido queda al 82 % en GPU y el resto en CPU.
 - **Conexión**: abierta con doble clic, la app envía `Origin: null` y Ollama responde 403 (comprobado). `OLLAMA_ORIGINS=null` hace que Ollama no arranque (`panic: bad origin`), y `OLLAMA_ORIGINS=*` funciona pero admite a cualquier web, incluso métodos como DELETE. Decisión del usuario: no usar `OLLAMA_ORIGINS`, cuyo valor no se llegó a cambiar. `iniciar.bat` e `iniciar.sh` lanzan `tools/servir.js`, que sirve `app/` en `http://127.0.0.1:8765` y abre el navegador. Ollama admite ese origen por defecto y sigue rechazando webs ajenas. Con doble clic la app funciona entera sin IA y, al elegir Ollama, avisa: "Para usar Ollama, abre la app con iniciar". El motivo está también en el README.
@@ -36,7 +63,7 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
   - El validador no detecta cantidades ni interpretaciones falsas con citas válidas. En la prueba final, una explicación decía que todas las peticiones web llevaban parámetros de comando, cuando solo algunas los llevaban. Las explicaciones deben revisarse antes de ir a un informe.
   - El validador también puede avisar de más: es una comprobación ligera, no una prueba de que la frase sea falsa.
   - Adaptadores `openai-compatible` y `anthropic` probados solo contra servidores simulados.
-- **Pendiente**: visto bueno del usuario.
+- **Aceptación**: visto bueno del usuario a la fase 4 el 04-11-2026, con los problemas de arriba resueltos.
 
 ## 2026-11-02 · Fase 3 (cerrada)
 

@@ -130,7 +130,9 @@ Aceptación:
 - [x] Con el Excel del cliente y con 2 datasets sintéticos, las cifras del dashboard coinciden con las de Análisis.
 - [x] Sin scroll horizontal a 400 px y legible en tema claro y oscuro.
 
-## [ ] Fase 4: IA independiente del proveedor (día 2, unas 3 h)
+## [x] Fase 4: IA independiente del proveedor (día 2, unas 3 h)
+
+**Decisión del usuario (04-11-2026)**: Ollama no es viable en el equipo del autor (con la GPU ocupada, por ejemplo grabando, no llega a responder). La IA se usa por API: la configuración del autor es Anthropic con `claude-haiku-5-5`, en `app/ai.config.local.js`. Ollama queda como adaptador opcional, no como predeterminado; la app sigue funcionando entera sin IA. Con Anthropic la app funciona abierta con doble clic, así que el lanzador `iniciar` solo hace falta para Ollama. Se mantienen el streaming, una petición a la vez y el límite por inactividad.
 
 1. **Primero, verificar el entorno del autor** y anotarlo en PROGRESO:
    - `ollama --version` y `ollama list`.
@@ -151,35 +153,26 @@ Aceptación:
 - [x] Una cita inventada a propósito (prueba manual) aparece marcada como no encontrada.
 - [x] Ninguna clave ni configuración local en `git status`.
 
-## [ ] Fase 5: Informes ejecutivo y técnico (día 2, unas 2–3 h)
+## [ ] Fase 5: Informes en PDF (fusiona las antiguas fases 5 y 6; día 2, unas 3 h)
 
-Pestaña **Informe**, con un campo para el nombre del analista, el cliente y la fecha.
+**Decisión del usuario (04-11-2026)**: los informes son archivos PDF. Se generan con pdfmake incluido en `app/vendor/`, sin diálogo de impresión, igual en Windows y Linux.
 
-- **Informe ejecutivo** (1–2 páginas, "en español ejecutivo", sin jerga): qué pasó en 3–4 frases, nivel de riesgo global, impacto para el negocio, incidentes en una tabla sencilla y 3–5 decisiones prioritarias.
-- **Informe técnico**, con las 8 secciones del reto:
-  1. Resumen ejecutivo.
-  2. Hallazgos identificados.
-  3. Explicación técnica de cada hallazgo, con MITRE.
-  4. Evidencias en los logs (Log_ID y extracto).
-  5. Criticidad y justificación, incluida la tabla de criterios de clasificación.
-  6. Posible impacto.
-  7. Plan de acción (investigar, contener, remediar) por incidente.
-  8. Recomendaciones generales.
-  Añadir un anexo de metodología (reglas, umbrales, cómo se valida la IA) y las anomalías a validar.
-- La versión con plantillas sale entera de `analysis`. Con IA, la IA reescribe la prosa de las secciones a partir de los mismos datos y el validador revisa sus citas. El analista puede **editar el texto** antes de exportar.
+Pestaña **Informe**:
+- Campos de analista y cliente, y fecha del informe.
+- Casilla **"Revisado por el analista"**, que exige el nombre; el nombre y la revisión aparecen en la portada.
+- Dos botones que descargan `Informe_Ejecutivo_<fecha>.pdf` e `Informe_Tecnico_<fecha>.pdf`. Solo se activan con el informe revisado y cuando la IA no está generando texto.
+
+Contenido, con plantillas a partir del motor:
+- **Informe ejecutivo** ("en español ejecutivo", sin jerga): qué pasó, nivel de riesgo global, impacto para el negocio, incidentes en una tabla sencilla y hasta 5 decisiones prioritarias.
+- **Informe técnico**, con las 8 secciones del reto: resumen ejecutivo, hallazgos identificados, explicación técnica con MITRE, evidencias en los logs (Log_ID y extracto), criticidad y justificación con la tabla de criterios, posible impacto, plan de acción (investigar, contener, remediar) por incidente y recomendaciones generales. Anexo de metodología (reglas, umbrales, cómo se valida la IA) y anomalías a validar.
+- Las cifras, tablas, evidencias, MITRE y criticidad salen siempre del motor. Los planes de acción, el impacto y las decisiones son plantillas por tipo de incidente rellenadas con sus actores reales.
+- La IA solo redacta el resumen ejecutivo (una llamada; se comprueba que sus cifras e incidentes estén en los datos del motor). El técnico reutiliza las explicaciones ya guardadas. Todo texto de IA va marcado y es editable antes de exportar.
 
 Aceptación:
-- [ ] Ambos informes completos con proveedor `none` y con Ollama.
+- [ ] Ambos PDF completos sin IA y con la IA del autor.
 - [ ] Todo Log_ID del informe existe en el archivo cargado (comprobación automática visible).
-
-## [ ] Fase 6: Exportar PDF (día 2, unas 1–2 h)
-
-- Vista de impresión con CSS `@media print`: portada (título, cliente, analista, fecha, "Confidencial"), informe ejecutivo, salto de página, informe técnico. Sin elementos de la interfaz.
-- Botón "Exportar PDF" → `window.print()` (Guardar como PDF). Evitar dependencias salvo que la calidad lo exija; si se usa una librería, incrustarla en `vendor/`.
-
-Aceptación:
-- [ ] PDF correcto en Chrome/Edge en Windows y en Chrome o Firefox en Linux: saltos de página limpios y tablas sin cortes feos.
-- [ ] Generar el PDF final con el Excel del cliente y guardarlo como `entrega/Informe_SOC_L2.pdf` (fuera de git si contiene datos del cliente; preguntar al usuario).
+- [ ] PDF correcto en Windows y en Linux: tildes, tablas sin cortes feos y saltos de página limpios.
+- [ ] Generar los PDF finales con el Excel del cliente y guardarlos en `entrega/` (fuera de git).
 
 ## [ ] Fase 7: Repositorio listo para GitHub (día 2, unas 1 h)
 

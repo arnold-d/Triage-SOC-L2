@@ -1,6 +1,6 @@
 # Triage SOC L2: reto final del bootcamp
 
-App web que carga un Excel exportado de un SIEM, detecta y correlaciona incidentes con reglas, clasifica su riesgo (Crítico, Alto, Medio, Bajo), usa IA para explicar y redactar, y exporta un **informe ejecutivo** y un **informe técnico** a PDF.
+App web que carga un Excel exportado de un SIEM, detecta y correlaciona incidentes con reglas, clasifica su riesgo (Crítico, Alto, Medio, Bajo), usa IA para explicar y redactar, y descarga un **informe ejecutivo** y un **informe técnico** en PDF.
 
 - **Entrega: domingo 8 de noviembre de 2026.** El desarrollo debe cerrarse en 2 días.
 - Plan, tareas y criterios de aceptación: `docs/PLAN.md`. **Léelo al empezar cada sesión** y trabaja por la primera fase que no esté marcada como hecha.
@@ -19,7 +19,9 @@ App web que carga un Excel exportado de un SIEM, detecta y correlaciona incident
 1. **Rigor analítico: no inventar hallazgos.** Toda conclusión cita Log_ID reales del archivo cargado.
 2. **Nada fijo del dataset en el código**: ni IPs, ni usuarios, ni hosts, ni Log_ID, ni fechas. Solo reglas genéricas con umbrales en `cfg`. Si una regla necesita un valor del Excel del cliente para acertar, está mal hecha.
 3. **La IA no decide qué es un incidente.** Lo deciden las reglas del motor. La IA explica, redacta y sugiere; la app valida que cada Log_ID o IP que cite exista y marca lo que no.
-4. **La app funciona completa sin IA** (proveedor `none`, con plantillas). **Nunca usar `OLLAMA_ORIGINS=*`**: expone Ollama a cualquier web visitada. Para Ollama, la app se abre con `iniciar`.
+4. **La app funciona completa sin IA** (proveedor `none`, con plantillas). La IA del autor es Anthropic (`claude-haiku-5-5`) por API; Ollama es un adaptador opcional. **Nunca usar `OLLAMA_ORIGINS=*`**: expone Ollama a cualquier web visitada; para Ollama, la app se abre con `iniciar`. Con Anthropic funciona también con doble clic.
+8. **La clave de API** está en `app/ai.config.local.js`: no leer ese archivo, no mostrar la clave ni copiarla a otro archivo. Las pruebas la cargan sin imprimirla.
+9. **Una petición a la IA cada vez**, con streaming y límite por inactividad (primer fragmento 5 min, luego 60 s sin texto).
 5. **Multiplataforma**: debe funcionar igual en Windows y Linux. Usa `path.join` en Node, nada de comandos exclusivos de un shell y archivos siempre en UTF-8.
 6. **Nada sensible en git**: ni el Excel del cliente, ni datos derivados de él (tampoco IPs, cuentas o Log_ID suyos en la documentación), ni claves o tokens, ni la configuración local de IA, ni videos o audios. Lo específico del cliente va en `CLAUDE.local.md` o en `docs/local/`, ambos ignorados por git.
 7. Tras cualquier cambio en el motor, deben pasar **las dos pruebas**: `node tests/test_cliente.js` (6 incidentes y 2 anomalías a validar con el Excel del cliente) y `node tests/test_generalizacion.js` (datasets sintéticos). Las cifras del dashboard se comprueban con `node tests/test_dashboard.js`.
@@ -28,15 +30,18 @@ App web que carga un Excel exportado de un SIEM, detecta y correlaciona incident
 
 ```
 app/
-  index.html               interfaz; con doble clic funciona sin IA; con Ollama, abrir con iniciar
+  index.html               interfaz; con doble clic funciona entera, también con Anthropic; con Ollama, abrir con iniciar
   css/app.css
   js/engine.js             motor de reglas → SOCEngine.analyze(rows, cfg)
   js/parser.js             lectura del .xlsx y normalización de columnas
   js/dashboard-data.js     cifras del dashboard a partir del resultado del motor
   js/ui-*.js               pestañas: registros, análisis, dashboard, informe
   js/ai.js                 adaptadores de IA: none, ollama, openai-compatible, anthropic
-  js/report.js             informes ejecutivo y técnico + vista de impresión/PDF
+  js/report.js             contenido de los informes ejecutivo y técnico a partir del motor
+  js/pdf.js                informes en PDF con pdfmake (sin diálogo de impresión)
+  js/ui-informe.js         pestaña Informe: edición, revisión y comprobación de citas
   vendor/xlsx.full.min.js  SheetJS incrustado (funciona sin internet)
+  vendor/pdfmake.min.js    pdfmake 0.3.12 con su fuente Roboto (vfs_fonts.js)
   ai.config.example.js     ejemplo                  → sí va a git
   ai.config.local.js       configuración del autor  → NO va a git
   sample.local.js          Excel del cliente en JS  → NO va a git
@@ -48,6 +53,8 @@ tests/test_generalizacion.js  N semillas sintéticas: cobertura y falsos positiv
 tests/test_dashboard.js    cuadra las cifras del dashboard con las del motor
 tests/test_ia.js           adaptadores de IA, errores, validador de citas y prompts, sin proveedor real
 tests/test_servir.js       servidor local: solo 127.0.0.1, sin salir de app/, Host comprobado
+tests/test_informe.js      informes completos sin IA, Log_ID existentes, cifras del resumen de IA comprobadas
+tests/test_pdf.js          PDF completos, caracteres presentes en la fuente, Log_ID del informe en el PDF
 docs/                      PLAN, REQUISITOS, PROGRESO
 legacy/                    versión anterior (fase 1–2) como referencia
 ```

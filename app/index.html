@@ -15,7 +15,7 @@
     <button class="tab" role="tab" aria-selected="true" id="tab-registros">Registros</button>
     <button class="tab" role="tab" aria-selected="false" id="tab-analisis" disabled>Análisis</button>
     <button class="tab" role="tab" aria-selected="false" id="tab-dashboard" disabled>Dashboard</button>
-    <button class="tab" role="tab" aria-selected="false" disabled>Informe PDF<small>F5</small></button>
+    <button class="tab" role="tab" aria-selected="false" id="tab-informe" disabled>Informe</button>
     <button class="tab" id="btnIA">Ajustes de IA</button>
   </nav>
 </header>
@@ -59,6 +59,7 @@
 
       <div id="view-analisis" hidden style="display:grid;gap:18px"></div>
       <div id="view-dashboard" hidden style="display:grid;gap:18px"></div>
+      <div id="view-informe" hidden style="display:grid;gap:18px"></div>
 
       <div class="work" id="view-registros">
         <aside class="filters" aria-label="Filtros">
@@ -118,6 +119,8 @@
 <div class="dtip" id="dtip" hidden></div>
 
 <script src="vendor/xlsx.full.min.js"></script>
+<script src="vendor/pdfmake.min.js"></script>
+<script src="vendor/vfs_fonts.js"></script>
 <!-- Opcionales: si no existen, la app sigue funcionando -->
 <script src="sample.local.js"></script>
 <script src="ai.config.local.js"></script>
@@ -130,6 +133,9 @@
 <script src="js/ui-analisis.js"></script>
 <script src="js/dashboard-data.js"></script>
 <script src="js/ui-dashboard.js"></script>
+<script src="js/report.js"></script>
+<script src="js/pdf.js"></script>
+<script src="js/ui-informe.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

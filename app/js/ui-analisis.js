@@ -11,9 +11,9 @@ function incChips(id){
 }
 function setView(v){
   state.view=v;
-  $("view-analisis").hidden = v!=="analisis"; $("view-registros").hidden = v!=="registros"; $("view-dashboard").hidden = v!=="dashboard";
-  for(const n of ["analisis","registros","dashboard"]) $("tab-"+n).setAttribute("aria-selected", v===n);
+  for(const n of ["analisis","registros","dashboard","informe"]){ $("view-"+n).hidden = v!==n; $("tab-"+n).setAttribute("aria-selected", v===n); }
   if(v==="dashboard") renderDashboard();
+  if(v==="informe") renderInforme();
 }
 function goIncident(id){ setView("analisis"); const el=document.getElementById("card-"+id); if(el){ el.scrollIntoView({behavior:"smooth",block:"start"}); } }
 function showEvidence(key){

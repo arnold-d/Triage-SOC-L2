@@ -24,11 +24,12 @@ function ingest(name, sheetName, header, data){
   if(sinFecha) avisos.push(`${sinFecha} fila(s) con fecha ilegible: se ven en Registros, pero no se analizan.`);
   w.hidden = !avisos.length;
   w.textContent = avisos.join(" ");
-  aiReset(); state.analysis = SOCEngine.analyze(rows); state.tlFit = false; aiRestore();
+  aiReset(); state.analysis = SOCEngine.analyze(rows); state.tlFit = false; aiRestore(); reportRestore();
   resetFilters(); buildFilterOptions(); renderKpis(); apply(); renderAnalysis();
-  $("tab-analisis").disabled = false; $("tab-dashboard").disabled = false;
+  $("tab-analisis").disabled = false; $("tab-dashboard").disabled = false; $("tab-informe").disabled = false;
   $("loader").hidden = true; $("loaded").hidden = false;
   setView(state.analysis.incidents.length ? "analisis" : "registros");
+  if(aiOn() && !aiBlocked() && state.ai.cfg.autoExplain && state.analysis.incidents.length) aiExplainAll();
 }
 
 // ---------- Eventos ----------
@@ -49,6 +50,13 @@ $("idsBanner").addEventListener("click",e=>{ if(e.target.id==="clearIds"){ state
 $("tab-registros").addEventListener("click",()=>setView("registros"));
 $("tab-analisis").addEventListener("click",()=>setView("analisis"));
 $("tab-dashboard").addEventListener("click",()=>setView("dashboard"));
+$("tab-informe").addEventListener("click",()=>setView("informe"));
+reportLoadMeta();
+const informe=$("view-informe");
+informe.addEventListener("input",reportInput);
+informe.addEventListener("change",reportChange);
+informe.addEventListener("click",reportClick);
+informe.addEventListener("focusout",reportBlur);
 const dash=$("view-dashboard");
 dash.addEventListener("click",dashClick);
 for(const t of ["pointermove","focusin"]) dash.addEventListener(t,dashTip);

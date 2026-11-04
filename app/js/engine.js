@@ -403,7 +403,7 @@ const SOCEngine = (() => {
     const flagged = new Map();
     for (const f of findings) for (const id of f.evidence) { if (!flagged.has(id)) flagged.set(id, []); flagged.get(id).push(f.id); }
     const accounts = compromised.map(c => ({ user: c.user, src: c.src, evidence: c.row.id, finding: c.via.id }));
-    return { findings, incidents, validations, flagged, CAT, compromised: accounts };
+    return { findings, incidents, validations, flagged, CAT, compromised: accounts, cfg, criteria: IMPACT_WHY };
   }
 
   const IMPACT_WHY = {
@@ -429,6 +429,6 @@ const SOCEngine = (() => {
     return inc.findings[0].rule;
   }
 
-  return { analyze, SEV_RANK };
+  return { analyze, SEV_RANK, CRITERIA: IMPACT_WHY };
 })();
 if (typeof module !== "undefined") module.exports = SOCEngine;

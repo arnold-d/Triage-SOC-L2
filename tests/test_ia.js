@@ -13,23 +13,37 @@ function check(nombre, ok, extra = "") { total++; if (!ok) fallos++; console.log
 async function falla(fn) { try { await fn(); return null; } catch (e) { return e; } }
 
 const peticiones = [];
-let modo = "ok";
+let modo = "ok", activas = 0, maxActivas = 0;
+const espera = ms => new Promise(r => setTimeout(r, ms));
+// Devuelve el texto en tres fragmentos, como un proveedor real
+async function enviar(res, sse, fragmentos) {
+  res.writeHead(200, { "content-type": sse ? "text/event-stream" : "application/x-ndjson" });
+  for (const f of fragmentos) {
+    if (modo === "corta" && f !== fragmentos[0]) return; // empieza y se queda callado
+    res.write((sse ? `data: ${JSON.stringify(f)}\n\n` : JSON.stringify(f) + "\n")); await espera(15);
+  }
+  if (sse && !fragmentos.some(f => f.type)) res.write("data: [DONE]\n\n");
+  res.end();
+}
 const server = http.createServer((req, res) => {
   let body = "";
   req.on("data", d => body += d);
-  req.on("end", () => {
+  req.on("end", async () => {
     const json = body ? JSON.parse(body) : null;
     peticiones.push({ url: req.url, headers: req.headers, json });
     const send = (code, o) => { res.writeHead(code, { "content-type": "application/json" }); res.end(typeof o === "string" ? o : JSON.stringify(o)); };
+    if (req.url === "/api/tags") return send(200, { models: [{ name: "modelo:7b" }] });
+    if (req.url === "/v1/models") return send(200, { data: [{ id: "modelo-b" }] });
+    if (req.url === "/api/chat" && json.messages.length === 0) return send(200, { done: true, done_reason: "load" });
+    activas++; maxActivas = Math.max(maxActivas, activas);
+    res.on("close", () => activas--);
     if (modo === "lento") return; // nunca responde
     if (modo === "error") return send(500, "fallo interno");
-    if (modo === "nojson") return send(200, "<html>");
-    const texto = modo === "vacio" ? "" : "<think>razono</think>**Hola** [ID-1]";
-    if (req.url === "/api/tags") return send(200, { models: [{ name: "modelo:7b" }] });
-    if (req.url === "/api/chat") return send(200, { message: { content: texto } });
-    if (req.url === "/v1/models") return send(200, { data: [{ id: "modelo-b" }] });
-    if (req.url === "/v1/chat/completions") return send(200, { choices: [{ message: { content: texto } }] });
-    if (req.url === "/v1/messages") return send(200, { stop_reason: modo === "rechazo" ? "refusal" : "end_turn", content: [{ type: "text", text: texto }] });
+    if (modo === "nojson") { res.writeHead(200); return res.end("<html>\n"); }
+    const partes = modo === "vacio" ? [""] : ["<think>razono</think>**Ho", "la** [ID", "-1]"];
+    if (req.url === "/api/chat") return enviar(res, false, [...partes.map(c => ({ message: { content: c }, done: false })), { done: true, prompt_eval_count: 100, eval_count: 20, eval_duration: 2e9 }]);
+    if (req.url === "/v1/chat/completions") return enviar(res, true, partes.map(c => ({ choices: [{ delta: { content: c } }] })));
+    if (req.url === "/v1/messages") return enviar(res, true, [{ type: "message_start" }, ...partes.map(t => ({ type: "content_block_delta", delta: { type: "text_delta", text: t } })), { type: "message_delta", delta: { stop_reason: modo === "rechazo" ? "refusal" : "end_turn" } }, { type: "message_stop" }]);
     send(404, {});
   });
 });
@@ -41,9 +55,13 @@ const server = http.createServer((req, res) => {
 
   // Adaptadores
   const ollama = { provider: "ollama", baseUrl: url + "/", model: "modelo:7b", apiKey: "" };
-  check("ollama: limpia la respuesta", await AI.chat(ollama, msgs) === "Hola [ID-1]");
+  const parciales = [];
+  let stats = null;
+  check("ollama: limpia la respuesta", await AI.chat(ollama, msgs, { onToken: t => parciales.push(t), onStats: s => stats = s }) === "Hola [ID-1]");
   let p = peticiones.at(-1);
-  check("ollama: API nativa sin streaming", p.url === "/api/chat" && p.json.stream === false && p.json.options.temperature === .2 && p.json.options.num_predict === 700 && p.json.options.num_ctx >= 6144);
+  check("ollama: API nativa con streaming", p.url === "/api/chat" && p.json.stream === true && p.json.options.temperature === .2 && p.json.options.num_predict === 700 && p.json.options.num_ctx >= 6144);
+  check("streaming: el texto llega por partes y ya limpio", parciales.length === 3 && parciales[0] === "Ho" && parciales.at(-1) === "Hola [ID-1]", JSON.stringify(parciales));
+  check("streaming: estadísticas del último fragmento", stats?.promptTokens === 100 && stats?.outputTokens === 20 && stats?.tokensPerSecond === 10);
   check("ollama: lista modelos", (await AI.models(ollama))[0] === "modelo:7b");
   check("ollama: carga el modelo sin generar", await AI.load(ollama) === true);
   p = peticiones.at(-1);
@@ -52,30 +70,49 @@ const server = http.createServer((req, res) => {
   check("ollama: cada petición mantiene el modelo cargado", peticiones.at(-1).json.keep_alive === "30m");
   check("otros proveedores: nada que cargar", await AI.load({ provider: "openai-compatible", baseUrl: url, model: "x" }) === false);
   const openai = { provider: "openai-compatible", baseUrl: url + "/v1", model: "modelo-b", apiKey: "secreta" };
-  check("compatible: responde", await AI.chat(openai, msgs) === "Hola [ID-1]");
+  const pOpen = [];
+  check("compatible: responde por streaming", await AI.chat(openai, msgs, { onToken: t => pOpen.push(t) }) === "Hola [ID-1]" && pOpen.length === 3);
   p = peticiones.at(-1);
-  check("compatible: envía la clave y los parámetros", p.headers.authorization === "Bearer secreta" && p.json.max_tokens === 700 && p.json.messages.length === 2);
+  check("compatible: envía la clave y los parámetros", p.headers.authorization === "Bearer secreta" && p.json.max_tokens === 700 && p.json.stream === true && p.json.messages.length === 2);
   check("compatible: lista modelos", (await AI.models(openai))[0] === "modelo-b");
   await AI.chat({ ...openai, apiKey: "" }, msgs);
   check("compatible: sin clave no envía cabecera", !peticiones.at(-1).headers.authorization);
   const anthropic = { provider: "anthropic", baseUrl: url, model: "", apiKey: "k" };
-  check("anthropic: responde", await AI.chat(anthropic, msgs) === "Hola [ID-1]");
+  check("anthropic: responde por streaming", await AI.chat(anthropic, msgs) === "Hola [ID-1]");
   p = peticiones.at(-1);
-  check("anthropic: formato actual", p.url === "/v1/messages" && p.json.system === "S" && p.json.messages.length === 1 && p.json.temperature === undefined && p.json.model === AI.ANTHROPIC_MODEL
+  check("anthropic: formato actual", p.url === "/v1/messages" && p.json.stream === true && p.json.system === "S" && p.json.messages.length === 1 && p.json.temperature === undefined && p.json.model === AI.ANTHROPIC_MODEL
     && p.headers["x-api-key"] === "k" && p.headers["anthropic-version"] === "2026-10-21" && p.headers["anthropic-dangerous-direct-browser-access"] === "true");
   modo = "rechazo"; check("anthropic: rechazo", (await falla(() => AI.chat(anthropic, msgs)))?.code === "refusal"); modo = "ok";
 
-  // Errores
+  // Errores y límites de tiempo
   check("none: no llama a nadie", (await falla(() => AI.chat({ provider: "none" }, msgs)))?.code === "none");
   check("sin modelo: pide configurarlo", (await falla(() => AI.chat({ ...ollama, model: "" }, msgs)))?.code === "config");
   modo = "vacio"; check("respuesta vacía", (await falla(() => AI.chat(ollama, msgs)))?.code === "empty");
   modo = "error"; const e500 = await falla(() => AI.chat(ollama, msgs)); check("error del servidor", e500?.code === "http" && /500/.test(e500.message));
-  modo = "nojson"; check("respuesta no JSON", (await falla(() => AI.chat(ollama, msgs)))?.code === "format");
-  modo = "lento"; check("tiempo de espera", (await falla(() => AI.chat(ollama, msgs, { timeoutMs: 80 })))?.code === "timeout");
-  const ctl = new AbortController(); setTimeout(() => ctl.abort(), 40);
-  check("cancelación", (await falla(() => AI.chat(ollama, msgs, { signal: ctl.signal, timeoutMs: 2000 })))?.code === "cancelled");
+  modo = "nojson"; check("fragmento no JSON", (await falla(() => AI.chat(ollama, msgs)))?.code === "format");
+  modo = "lento"; const eIni = await falla(() => AI.chat(ollama, msgs, { firstTokenMs: 80, idleMs: 5000 }));
+  check("sin primer fragmento: límite de inicio", eIni?.code === "timeout" && /no empezó a responder/.test(eIni.message), eIni?.message);
+  modo = "corta"; const eIdle = await falla(() => AI.chat(ollama, msgs, { firstTokenMs: 5000, idleMs: 80 }));
+  check("se queda callado a mitad: límite de inactividad", eIdle?.code === "timeout" && /dejó de enviar texto/.test(eIdle.message), eIdle?.message);
+  modo = "ok";
+  const t0 = Date.now(); await AI.chat(ollama, msgs, { firstTokenMs: 5000, idleMs: 30 });
+  check("un texto largo no se corta mientras siga llegando", Date.now() - t0 >= 30);
+  modo = "lento"; const ctl = new AbortController(); setTimeout(() => ctl.abort(), 40);
+  check("cancelación", (await falla(() => AI.chat(ollama, msgs, { signal: ctl.signal, firstTokenMs: 2000 })))?.code === "cancelled");
   modo = "ok";
   check("servicio apagado", (await falla(() => AI.chat({ ...ollama, baseUrl: "http://127.0.0.1:9" }, msgs)))?.code === "unavailable");
+
+  // Nunca dos peticiones a la vez
+  maxActivas = 0;
+  const inicios = [];
+  const varias = await Promise.all([1, 2, 3].map(n => AI.chat(ollama, msgs, { onStart: () => inicios.push(n) })));
+  check("tres peticiones a la vez se atienden de una en una", maxActivas === 1 && varias.every(t => t === "Hola [ID-1]") && inicios.join() === "1,2,3", `máximo simultáneo ${maxActivas}, orden ${inicios}`);
+  const ctl2 = new AbortController();
+  const larga = AI.chat(ollama, msgs), enCola = falla(() => AI.chat(ollama, msgs, { signal: ctl2.signal }));
+  check("mientras hay una en curso, se informa", AI.busy());
+  ctl2.abort();
+  check("una petición en cola se puede cancelar antes de empezar", (await enCola)?.code === "cancelled" && (await larga) === "Hola [ID-1]");
+  check("la cola no se bloquea tras un error", (await falla(() => AI.chat({ ...ollama, model: "" }, msgs)))?.code === "config" && await AI.chat(ollama, msgs) === "Hola [ID-1]");
 
   // Privacidad
   check("local: Ollama en localhost", AI.isLocal({ provider: "ollama", baseUrl: "" }) && AI.isLocal({ provider: "openai-compatible", baseUrl: "http://127.0.0.1:1234/v1" }));

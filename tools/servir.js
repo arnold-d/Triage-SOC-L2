@@ -39,6 +39,11 @@ const servidor = http.createServer((req, res) => {
   const archivo = path.resolve(raiz, "." + (ruta.endsWith("/") ? ruta + "index.html" : ruta));
   if (archivo !== raiz && !archivo.startsWith(raiz + path.sep)) return responder(res, 403, "Fuera de la app");
   fs.stat(archivo, (err, info) => {
+    // Los *.local.js son opcionales y no van a git: si faltan, un script vacío evita errores en la consola
+    if ((err || !info.isFile()) && archivo.endsWith(".local.js")) {
+      res.writeHead(200, { "content-type": TIPOS[".js"], "cache-control": "no-store", "x-content-type-options": "nosniff" });
+      return res.end(req.method === "HEAD" ? undefined : `// ${path.basename(archivo)} no existe: es opcional.\n`);
+    }
     if (err || !info.isFile()) return responder(res, 404, "No encontrado");
     res.writeHead(200, { "content-type": TIPOS[path.extname(archivo).toLowerCase()] || "application/octet-stream", "content-length": info.size, "cache-control": "no-store", "x-content-type-options": "nosniff" });
     if (req.method === "HEAD") return res.end();
