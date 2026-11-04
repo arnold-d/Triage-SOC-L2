@@ -1,5 +1,5 @@
 // Ejemplo de configuración de IA. Copia este archivo como ai.config.local.js (no va a git) y ajústalo.
-// Con provider "none" la app funciona entera con plantillas, sin IA.
+// Este archivo es opcional. Sin él, o con provider "none" y sin clave de API, la app funciona entera con plantillas.
 window.SOC_AI_CONFIG = {
   provider: "none",   // none | anthropic | openai-compatible | ollama
   baseUrl: "",        // vacío: la URL por defecto del proveedor (Ollama: http://localhost:11434)

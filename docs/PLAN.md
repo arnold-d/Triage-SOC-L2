@@ -7,7 +7,7 @@ Punto de partida: `app/triage-soc-l2.html` (fases 1–2 hechas) y su código en 
 | Día | Fases | Resultado al final del día |
 |---|---|---|
 | 1 | 2.5 Reestructurar · 2.6 Generador y prueba de generalización · 3 Dashboard | App portable sin build, motor validado con datos que no ha visto, dashboard |
-| 2 | 4 IA · 5 Informes · 6 PDF · 7 Repositorio | PDF final listo para el video; repositorio preparado (el push lo decide el usuario) |
+| 2 | 4 IA · 5 Informes en PDF · 6 Empaquetado y portabilidad · 7 Repositorio | PDF final listo para el video; repositorio preparado (el push lo decide el usuario) |
 
 Si el día 1 se alarga, la fase 3 pasa al día 2 y la 7 se reduce al README.
 
@@ -174,9 +174,27 @@ Aceptación:
 - [ ] PDF correcto en Windows y en Linux: tildes, tablas sin cortes feos y saltos de página limpios.
 - [ ] Generar los PDF finales con el Excel del cliente y guardarlos en `entrega/` (fuera de git).
 
+## [ ] Fase 6: Empaquetado y portabilidad (día 2, unas 2 h)
+
+**Decisión del usuario (04-11-2026)**, tras probar en Linux: `iniciar.sh` pedía Node y no abría nada, lo que confunde aunque la app no lo necesite. Licencia MIT para el código propio. El zip incluye también `iniciar` y `tools/servir.js`, para poder usar Ollama.
+
+- `ABRIR_AQUI.html` en la raíz, que lleva a `app/index.html`. El README empieza por cómo abrirla sin ejecutar nada.
+- `iniciar.sh` e `iniciar.bat`: sin Node, abren `app/index.html` y explican que Node solo hace falta para Ollama.
+- Zip de entrega (`tools/empaquetar.js`, desde HEAD y con una lista cerrada de archivos): la app, el README, `LICENSE`, `iniciar`, `tools/servir.js` y `datasets/demo_publico.xlsx`. Sin datos del cliente ni archivos `.local`. Con su SHA-256, listo para un Release de GitHub.
+- README: apartado de librerías de `vendor/` con versión, licencia y SHA-256, y nota de que ningún script es necesario. Licencias de terceros junto a cada librería (SheetJS Apache-2.0, pdfmake MIT, Roboto OFL 1.1).
+- Dejar claro (README, Ajustes y `ai.config.example.js`) que sin clave de API todo funciona con plantillas.
+
+Aceptación (desde el zip descomprimido, en una ruta con espacios y tildes, sin Node):
+- [ ] Windows · Edge: abrir `ABRIR_AQUI.html`, cargar `demo_publico.xlsx`, ver dashboard y descargar los dos PDF.
+- [ ] Windows · Chrome: lo mismo.
+- [ ] Linux · Firefox: lo mismo (lo prueba el usuario).
+- [ ] Linux · Chromium: lo mismo (lo prueba el usuario).
+- [ ] `iniciar` sin Node abre la app en Windows y en Linux.
+- [ ] El zip no contiene datos del cliente ni archivos `.local`, y su SHA-256 coincide.
+
 ## [ ] Fase 7: Repositorio listo para GitHub (día 2, unas 1 h)
 
 - `README.md`: qué hace, captura del dashboard, cómo usarla (abrir `index.html`), cómo conectar una IA (cada proveedor) y "en el entorno de pruebas del autor se usó Ollama con el modelo X", cómo ejecutar las pruebas y el generador, arquitectura y principios (reglas deterministas + IA validada). Enlaces al video y al PDF, que pone el usuario.
-- Licencia: preguntar al usuario.
+- Licencia: MIT (decidida en la fase 6). Publicar el zip de la fase 6 como Release con su SHA-256.
 - Revisión final de `git status` y del historial: ningún dato del cliente (tampoco en `docs/` ni en `CLAUDE.md`), clave ni archivo grande. Buscar en lo que se va a subir IPs, cuentas y Log_ID del cliente, por ejemplo con `git grep` y los valores de `CLAUDE.local.md`.
 - **No hacer push** sin que el usuario lo pida.

@@ -42,11 +42,15 @@ app/
   js/ui-informe.js         pestaña Informe: edición, revisión y comprobación de citas
   vendor/xlsx.full.min.js  SheetJS incrustado (funciona sin internet)
   vendor/pdfmake.min.js    pdfmake 0.3.12 con su fuente Roboto (vfs_fonts.js)
+  vendor/*.LICENSE.txt, Roboto.OFL.txt  licencias de SheetJS (Apache-2.0), pdfmake (MIT) y Roboto (OFL 1.1)
   ai.config.example.js     ejemplo                  → sí va a git
   ai.config.local.js       configuración del autor  → NO va a git
   sample.local.js          Excel del cliente en JS  → NO va a git
-iniciar.bat, iniciar.sh    lanzadores de tools/servir.js
+ABRIR_AQUI.html            entrada sin ejecutar nada: redirige a app/index.html
+LICENSE                    MIT (código propio)
+iniciar.bat, iniciar.sh    con Node, lanzan tools/servir.js; sin Node, abren app/index.html y avisan de que Node solo es para Ollama
 tools/servir.js            sirve app/ en 127.0.0.1:8765 y abre el navegador, sin dependencias
+tools/empaquetar.js        zip de entrega para un Release (desde HEAD, lista cerrada de archivos) y su SHA-256 en entrega/
 tools/generar_dataset.js   genera Excel sintéticos + verdad de referencia (.truth.json)
 tests/test_cliente.js      prueba con el Excel del cliente (solo local)
 tests/test_generalizacion.js  N semillas sintéticas: cobertura y falsos positivos
