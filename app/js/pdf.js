@@ -43,8 +43,9 @@ const SOCPdf = (() => {
     }
     if (b.kind === "ai") {
       const t = text ?? b.text;
-      const cit = b.cit ? `${b.cit.verified} citas verificadas, ${b.cit.missing} no encontradas${b.cit.mismatch ? `, ${b.cit.mismatch} con datos que no coinciden` : ""}` : "";
-      const chk = b.check && !b.check.ok ? "cifras no comprobadas en los datos del motor" : "";
+      // El resumen ejecutivo no cita Log_ID: se comprueban sus cifras, no sus citas
+      const cit = b.check ? "" : b.cit ? `${b.cit.verified} citas verificadas, ${b.cit.missing} no encontradas${b.cit.mismatch ? `, ${b.cit.mismatch} con datos que no coinciden` : ""}` : "";
+      const chk = !b.check ? "" : b.check.ok ? "cifras comprobadas con el motor" : "cifras no comprobadas en los datos del motor";
       const label = ["TEXTO DE IA", b.model, text != null ? "editado por el analista" : null, meta.reviewed && meta.analista ? `revisado por ${meta.analista}` : "pendiente de revisión", cit, chk].filter(Boolean).join(" · ");
       return { table: { widths: ["*"], body: [[{ stack: [{ text: safe(label), style: "label", color: COLOR.accent }, { text: safe(t) }] }]] },
         layout: { hLineWidth: () => 0, vLineWidth: i => i === 0 ? 2 : 0, vLineColor: () => COLOR.accent, paddingLeft: () => 8 }, margin: [0, 2, 0, 8] };

@@ -4,6 +4,14 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
 
 ---
 
+## 2026-11-04 · v1.1: resumen ejecutivo sin duplicar
+
+Tras revisar el PDF combinado, el usuario detectó dos fallos:
+- **Resumen duplicado**: "Qué pasó" (ejecutivo) y la sección 1 del técnico mostraban el párrafo de plantilla y, debajo, el de IA, casi iguales. Ahora, si hay resumen de IA, sustituye al de plantilla; si no, se usa la plantilla. Nunca salen los dos. En la pestaña Informe hay un botón "Usar la plantilla en su lugar" para descartar el de IA.
+- **Etiqueta engañosa**: el resumen de IA decía "0 citas verificadas, 0 no encontradas", porque no cita Log_ID. Ahora dice "cifras comprobadas con el motor" (o "cifras no comprobadas en los datos del motor" si la comprobación falla).
+- Pruebas: `test_pdf` comprueba en cada dataset que hay un solo resumen, que no dice "0 citas" y que lleva la etiqueta de cifras (214 de 214). Las demás siguen en verde.
+- PDF finales regenerados en `entrega/` y zip `triage-soc-l2-v1.1.zip` con su SHA-256.
+
 ## 2026-11-04 · Fase 7: repositorio preparado (sin publicar)
 
 - **README final**: qué hace, captura del dashboard (`docs/img/dashboard.png`, hecha con `datasets/demo_publico.xlsx` desde una copia del zip sin configuración de IA, nunca con el Excel del cliente), enlaces al video y al PDF como marcadores `RELLENAR_ENLACE_VIDEO` y `RELLENAR_ENLACE_PDF`, y sección "Cómo se construyó" con principios, fases, pruebas y uso de IA (en la app y en el desarrollo).

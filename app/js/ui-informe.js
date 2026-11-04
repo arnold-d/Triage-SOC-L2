@@ -88,7 +88,8 @@ function reportExecControls() {
   if (e?.status === "loading") return `<span class="dnote">${e.partial ? "Redactando el resumen ejecutivo…" : "Preparando el resumen ejecutivo…"}</span> <button class="linkbtn" data-rp-stop>Cancelar</button><p class="ai-live">${esc(e.partial || "")}</p>`;
   const err = e?.status === "error" ? `<span class="ai-err">${esc(e.message)} Se mantiene la plantilla.</span> ` : "";
   const n = [...state.ai.explain.values()].filter(x => x.status === "done").length;
-  return `${err}<button class="btn" data-rp-exec>${e?.status === "done" ? "Redactar de nuevo el resumen con IA" : "Redactar el resumen ejecutivo con IA"}</button>
+  return `${err}<button class="btn" data-rp-exec>${e?.status === "done" ? "Redactar de nuevo el resumen con IA" : "Redactar el resumen ejecutivo con IA"}</button>${e?.status === "done" ? ` <button class="linkbtn" data-rp-plantilla>Usar la plantilla en su lugar</button>` : ""}
+    <span class="dnote">El resumen de IA sustituye al de plantilla.</span>
     <span class="dnote">El informe técnico usa las explicaciones ya generadas: ${n} de ${state.analysis.incidents.length}.</span>`;
 }
 function renderInforme() {
@@ -177,5 +178,6 @@ function reportChange(e) {
 function reportClick(e) {
   if (e.target.closest("[data-rp-exec]")) reportExec();
   if (e.target.closest("[data-rp-stop]")) state.report.exec?.ctl?.abort();
+  if (e.target.closest("[data-rp-plantilla]")) { state.report.exec = null; delete state.report.edits["exec-ai"]; reportStore(); renderInforme(); }
   const pdf = e.target.closest("[data-rp-pdf]"); if (pdf && !pdf.disabled) reportPdf(pdf.dataset.rpPdf);
 }

@@ -164,8 +164,9 @@ const SOCReport = (() => {
       compromised.length || hostsAff.length ? `Hay ${plural(compromised.length, "cuenta comprometida", "cuentas comprometidas")} y ${plural(hostsAff.length, "equipo implicado", "equipos implicados")}.` : null,
       A.validations.length ? `Además, ${plural(A.validations.length, "anomalía requiere", "anomalías requieren")} validación con el cliente; no se consideran incidentes.` : null,
     ].filter(Boolean);
-    const resumen = [p(queFrases.join(" "), "plantilla")];
-    if (executiveAI?.text) resumen.push({ id: "exec-ai", kind: "ai", source: "ia", text: executiveAI.text, model: executiveAI.model, check: executiveAI.check, cit: executiveAI.cit });
+    // Si hay resumen de IA, sustituye al de plantilla; nunca salen los dos
+    const resumenIA = idAI => ({ id: idAI, kind: "ai", source: "ia", text: executiveAI.text, model: executiveAI.model, check: executiveAI.check, cit: executiveAI.cit });
+    const resumen = executiveAI?.text ? [resumenIA("exec-ai")] : [p(queFrases.join(" "), "plantilla")];
 
     const riesgo = top ? `Riesgo global: ${top}. ${analysis.criteria[top] || ""} Se toma la criticidad del incidente más grave.` : "Riesgo global: sin incidentes. Las reglas no identificaron actividad hostil confirmada.";
     const decisiones = [...new Map(info.map(x => [KINDS[x.kind].decisionKey || x.kind, KINDS[x.kind].decision])).values()].slice(0, 5);
@@ -221,7 +222,7 @@ const SOCReport = (() => {
       ...(A.validations.length ? [{ id: id(), kind: "h", text: "Anomalías a validar con el cliente (no son incidentes)" }, table(["Hallazgo", "Detalle", "Evidencias"], A.validations.map(v => [v.title, v.detail, v.evidence.join(", ")]))] : []),
     ];
     const technical = [
-      { id: "t1", title: "1. Resumen ejecutivo", blocks: [p(queFrases.join(" ")), ...(executiveAI?.text ? [{ id: "exec-ai-t", kind: "ai", source: "ia", text: executiveAI.text, model: executiveAI.model, check: executiveAI.check, cit: executiveAI.cit }] : []), p(riesgo)] },
+      { id: "t1", title: "1. Resumen ejecutivo", blocks: [executiveAI?.text ? resumenIA("exec-ai-t") : p(queFrases.join(" ")), p(riesgo)] },
       { id: "t2", title: "2. Hallazgos identificados", blocks: [p(`${plural(active.length, "hallazgo", "hallazgos")} en ${plural(incidents.length, "incidente", "incidentes")}, respaldados por ${events.size} de ${rows.length} eventos.`, "motor"), table(["ID", "Incidente", "Regla", "Categoría", "Criticidad", "Hora", "MITRE"], hallazgos)] },
       { id: "t3", title: "3. Explicación técnica de cada hallazgo", blocks: explicacion },
       { id: "t4", title: "4. Evidencias en los logs", blocks: evidencias },

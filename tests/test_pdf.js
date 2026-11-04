@@ -56,6 +56,14 @@ async function comprobar(nombre, aoa, conIA) {
       check(`${nombre} ejecutivo: las 5 secciones`, R.executive.every(s => text.includes(s.title)));
       if (conIA) check(`${nombre} ejecutivo: el resumen de IA va marcado`, text.includes("TEXTO DE IA"));
     }
+    // El resumen de IA sustituye al de plantilla (nunca los dos) y su etiqueta habla de cifras, no de citas
+    const plantilla = R[kind][0].blocks.filter(b => b.kind === "p" && b.source === "plantilla" && /eventos del SIEM identific/.test(b.text));
+    const ia = R[kind][0].blocks.filter(b => b.kind === "ai");
+    check(`${nombre} ${kind}: un solo resumen`, conIA ? ia.length === 1 && !plantilla.length : !ia.length && plantilla.length === 1);
+    if (conIA) {
+      check(`${nombre} ${kind}: el resumen de IA no dice "0 citas"`, !/0 citas verificadas, 0 no encontradas/.test(text));
+      check(`${nombre} ${kind}: etiqueta de cifras comprobadas`, text.includes("cifras comprobadas con el motor"));
+    }
     const buf = await pdfMake.createPdf(doc).getBuffer();
     const n = paginas(Buffer.from(buf));
     check(`${nombre} ${kind}: el PDF se genera`, buf.length > 20000 && Buffer.from(buf).slice(0, 5).toString() === "%PDF-", `${buf.length} bytes`);

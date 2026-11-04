@@ -56,7 +56,7 @@ En el entorno del autor se usa Anthropic con `claude-haiku-5-5`: explicar los 6 
 
 En la pestaña **Informe**, escribe analista y cliente, revisa el texto (las frases se pueden editar; las tablas salen del motor) y marca **Revisado por el analista**. Después descarga `Informe_Ejecutivo_<fecha>.pdf` e `Informe_Tecnico_<fecha>.pdf`. Los PDF se generan en el navegador con [pdfmake](https://pdfmake.org), sin diálogo de impresión.
 
-Las cifras, tablas, evidencias, técnicas MITRE y criticidades salen siempre del motor. Los textos de IA van marcados en el PDF con el modelo, el número de citas verificadas y quién los revisó.
+Las cifras, tablas, evidencias, técnicas MITRE y criticidades salen siempre del motor. Los textos de IA van marcados en el PDF con el modelo y quién los revisó; las explicaciones, además, con el número de citas verificadas, y el resumen ejecutivo, con la comprobación de sus cifras. Si hay resumen de IA, sustituye al de plantilla.
 
 ## Reglas e IA
 
@@ -109,7 +109,7 @@ La prueba de generalización usa 30 semillas sintéticas: 100 % de cobertura y 0
 
 Para crear un dataset sintético: `node tools/generar_dataset.js --seed 42 --eventos 1500 --out datasets/sint_42.xlsx`. `datasets/demo_publico.xlsx` se generó así.
 
-Para crear el zip de entrega: `node tools/empaquetar.js --version 1.0` (requiere git). Deja `entrega/triage-soc-l2-v1.0.zip` y su `.sha256`, con la app, este README, la licencia, `iniciar`, `tools/servir.js`, `datasets/demo_publico.xlsx` y la captura del dashboard.
+Para crear el zip de entrega: `node tools/empaquetar.js --version 1.1` (requiere git). Deja `entrega/triage-soc-l2-v1.1.zip` y su `.sha256`, con la app, este README, la licencia, `iniciar`, `tools/servir.js`, `datasets/demo_publico.xlsx` y la captura del dashboard.
 
 ### Uso de IA
 
