@@ -36,7 +36,10 @@ function entradas(buf) {
 const cambios = git("status", "--porcelain", "--", ...INCLUIR).toString().trim();
 if (cambios) console.warn(`Aviso: hay cambios sin commit que NO entran en el zip (se usa HEAD):\n${cambios}\n`);
 
-const zip = git("archive", "--format=zip", `--prefix=${nombre}/`, "HEAD", "--", ...INCLUIR);
+// Con el árbol (no el commit) y la fecha del último commit que tocó estos archivos, el SHA-256 solo
+// cambia si cambia el contenido del zip, no por commits en docs/ o tests/.
+const fecha = git("log", "-1", "--format=%ct", "HEAD", "--", ...INCLUIR).toString().trim();
+const zip = git("archive", "--format=zip", `--prefix=${nombre}/`, `--mtime=@${fecha}`, "HEAD^{tree}", "--", ...INCLUIR);
 const lista = entradas(zip).filter(e => !e.nombre.endsWith("/"));
 const relativos = lista.map(e => e.nombre.slice(nombre.length + 1));
 const malos = relativos.filter(r => PROHIBIDO.test(r) || (/\.xlsx$/i.test(r) && r !== "datasets/demo_publico.xlsx")
