@@ -60,6 +60,7 @@ tests/test_servir.js       servidor local: solo 127.0.0.1, sin salir de app/, Ho
 tests/test_informe.js      informes completos sin IA, Log_ID existentes, cifras del resumen de IA comprobadas
 tests/test_pdf.js          PDF completos, caracteres presentes en la fuente, Log_ID del informe en el PDF
 docs/                      PLAN, REQUISITOS, PROGRESO
+docs/img/dashboard.png     captura del README, hecha SOLO con datasets/demo_publico.xlsx
 legacy/                    versión anterior (fase 1–2) como referencia
 ```
 

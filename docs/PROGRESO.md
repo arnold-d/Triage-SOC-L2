@@ -4,7 +4,24 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
 
 ---
 
-## 2026-11-04 · Fase 6: empaquetado y portabilidad (pendiente del visto bueno del usuario)
+## 2026-11-04 · Fase 7: repositorio preparado (sin publicar)
+
+- **README final**: qué hace, captura del dashboard (`docs/img/dashboard.png`, hecha con `datasets/demo_publico.xlsx` desde una copia del zip sin configuración de IA, nunca con el Excel del cliente), enlaces al video y al PDF como marcadores `RELLENAR_ENLACE_VIDEO` y `RELLENAR_ENLACE_PDF`, y sección "Cómo se construyó" con principios, fases, pruebas y uso de IA (en la app y en el desarrollo).
+- **Revisión de todo el historial** (`git rev-list --objects --all`: 12 commits, 114 versiones de archivo, también los mensajes de commit), contra 821 valores del Excel del cliente y de `CLAUDE.local.md`:
+  - Datos del cliente: ninguna IP, cuenta, equipo ni Log_ID suyos. Solo coinciden valores genéricos: nombres de procesos de Windows (`powershell.exe`, `vssadmin.exe delete shadows /all /quiet`, `cmd.exe /c whoami`), la cuenta integrada `IIS APPPOOL\DefaultAppPool`, `/admin/` y los identificadores `INC-01`…`INC-06`, que genera el motor para cualquier archivo.
+  - Claves: la clave de `ai.config.local.js` (cargada sin imprimirla) no aparece en ningún objeto, y no hay patrones de clave (`sk-ant-`, `sk-`, `AKIA`, `ghp_`).
+  - Archivos grandes: ninguno supera 1 MB (los mayores son las librerías de `vendor/` y la demo, de 0,8 a 0,95 MB). El repositorio ocupa unos 2 MB.
+  - Rutas: ningún `.local`, `CLAUDE.local.md`, video, audio, `entrega/` ni `legacy/` en ningún commit. Autor y committer de todos los commits: `arnold_d` con el correo noreply de GitHub.
+- **Pendiente**: el usuario publica el repositorio privado y crea el Release v1.0; rellenar los enlaces del README.
+
+## 2026-11-04 · Fase 5 cerrada: PDF finales
+
+- **Visto bueno del usuario a la fase 5** el 04-11-2026.
+- **PDF finales** en `entrega/` (fuera de git), con el Excel del cliente, analista Arnold Duarte, sin nombre de cliente, IA del autor: `Informe_Ejecutivo_2026-11-04.pdf` (2 páginas), `Informe_Tecnico_2026-11-04.pdf` (17) y `Informe_Ejecutivo_y_Tecnico_2026-11-04.pdf` (19, para el formulario). Todos los Log_ID del informe existen; el resumen ejecutivo pasó la comprobación de cifras e incidentes. Coste: 7 llamadas, unos 0,011 $ (más 0,009 $ de una primera tanda descartada).
+- **La IA señaló tres datos engañosos del prompt**, no del motor: "IP: ninguna" cuando el incidente solo tiene IP internas, "30 de 35 eventos" sin decir que era un extracto, y 4 citas de un hallazgo con 5 evidencias (parecía que la regla omitía una). El prompt dice ahora "IP señaladas por las reglas", "Extracto: n de los N eventos… no digas que faltan" y "(y n más)". `test_ia` tiene 3 comprobaciones nuevas (67 en total).
+- **Corrección del analista**: la explicación de INC-05 terminaba con una frase falsa (que los registros no vinculan el binario con el servicio, cuando el servicio apunta a ese binario). Se eliminó solo esa frase y el PDF la marca como "editado por el analista". El resto de textos de IA se revisó contra los registros.
+
+## 2026-11-04 · Fase 6: empaquetado y portabilidad (pendiente de la prueba en Linux)
 
 - **Para grabar** (sustituye a la de la fase 5): graba desde la carpeta de trabajo, no desde el zip, porque el zip no lleva `ai.config.local.js` y la clave no debe copiarse a otro archivo. Abre `ABRIR_AQUI.html` con doble clic (con Anthropic no hace falta `iniciar`); en Ajustes de IA comprueba que la configuración activa es "archivo ai.config.local.js" y pulsa "Probar conexión"; genera las explicaciones y el resumen ejecutivo **antes** de grabar, porque se guardan durante la sesión del navegador; en la pestaña Informe escribe analista y cliente, marca "Revisado por el analista" y descarga los dos PDF. Para mostrar que no hace falta instalar nada, enseña aparte el zip descomprimido, sin IA, con `datasets/demo_publico.xlsx`.
 - **Motivo**: en Linux, `iniciar.sh` pedía Node y no abría nada, lo que confunde aunque la app no lo necesite.

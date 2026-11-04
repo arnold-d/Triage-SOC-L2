@@ -12,8 +12,8 @@ const arg = k => { const i = process.argv.indexOf("--" + k); return i > 0 ? proc
 const version = arg("version") || "1.0";
 const nombre = `triage-soc-l2-v${version}`;
 const INCLUIR = ["ABRIR_AQUI.html", "README.md", "LICENSE", "iniciar.bat", "iniciar.sh", "tools/servir.js",
-  "datasets/demo_publico.xlsx", "app/index.html", "app/ai.config.example.js", "app/css", "app/js", "app/vendor"];
-const PROHIBIDO = /\.local(\.|$)|(^|\/)(CLAUDE|docs|tests|legacy|entrega|video)(\/|\.|$)|\.(mp4|m4a)$/i;
+  "datasets/demo_publico.xlsx", "docs/img/dashboard.png", "app/index.html", "app/ai.config.example.js", "app/css", "app/js", "app/vendor"];
+const PROHIBIDO = /\.local(\.|$)|(^|\/)(CLAUDE|tests|legacy|entrega|video)(\/|\.|$)|^docs\/(?!img\/)|\.(mp4|m4a)$/i;
 
 const git = (...a) => execFileSync("git", ["-C", raiz, "-c", "core.autocrlf=false", ...a], { encoding: "buffer", maxBuffer: 1 << 28 });
 

@@ -153,7 +153,7 @@ Aceptación:
 - [x] Una cita inventada a propósito (prueba manual) aparece marcada como no encontrada.
 - [x] Ninguna clave ni configuración local en `git status`.
 
-## [ ] Fase 5: Informes en PDF (fusiona las antiguas fases 5 y 6; día 2, unas 3 h)
+## [x] Fase 5: Informes en PDF (fusiona las antiguas fases 5 y 6; día 2, unas 3 h)
 
 **Decisión del usuario (04-11-2026)**: los informes son archivos PDF. Se generan con pdfmake incluido en `app/vendor/`, sin diálogo de impresión, igual en Windows y Linux.
 
@@ -169,10 +169,10 @@ Contenido, con plantillas a partir del motor:
 - La IA solo redacta el resumen ejecutivo (una llamada; se comprueba que sus cifras e incidentes estén en los datos del motor). El técnico reutiliza las explicaciones ya guardadas. Todo texto de IA va marcado y es editable antes de exportar.
 
 Aceptación:
-- [ ] Ambos PDF completos sin IA y con la IA del autor.
-- [ ] Todo Log_ID del informe existe en el archivo cargado (comprobación automática visible).
-- [ ] PDF correcto en Windows y en Linux: tildes, tablas sin cortes feos y saltos de página limpios.
-- [ ] Generar los PDF finales con el Excel del cliente y guardarlos en `entrega/` (fuera de git).
+- [x] Ambos PDF completos sin IA y con la IA del autor.
+- [x] Todo Log_ID del informe existe en el archivo cargado (comprobación automática visible).
+- [x] PDF correcto en Windows y en Linux: tildes, tablas sin cortes feos y saltos de página limpios (Linux: lo comprueba el usuario en la fase 6).
+- [x] Generar los PDF finales con el Excel del cliente y guardarlos en `entrega/` (fuera de git).
 
 ## [ ] Fase 6: Empaquetado y portabilidad (día 2, unas 2 h)
 
@@ -193,6 +193,8 @@ Aceptación (desde el zip descomprimido, en una ruta con espacios y tildes, sin 
 - [x] El zip no contiene datos del cliente ni archivos `.local`, y su SHA-256 coincide.
 
 ## [ ] Fase 7: Repositorio listo para GitHub (día 2, unas 1 h)
+
+**Preparada el 04-11-2026, sin publicar.** README final, captura con `demo_publico.xlsx`, revisión de todo el historial (todos los commits y objetos). El usuario publica desde VS Code como repositorio **privado** y crea el Release v1.0 con el zip y su SHA-256.
 
 - `README.md`: qué hace, captura del dashboard, cómo usarla (abrir `index.html`), cómo conectar una IA (cada proveedor) y "en el entorno de pruebas del autor se usó Ollama con el modelo X", cómo ejecutar las pruebas y el generador, arquitectura y principios (reglas deterministas + IA validada). Enlaces al video y al PDF, que pone el usuario.
 - Licencia: MIT (decidida en la fase 6). Publicar el zip de la fase 6 como Release con su SHA-256.

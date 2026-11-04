@@ -26,7 +26,7 @@ Fuerza bruta · inicios sospechosos (por origen, horario o patrón) · escalamie
 ## IA integrada (obligatoria)
 - Audio: "que la IA lo ayude", "todo eso lo hace la IA, mete su componente de IA", "integrada con agentes de IA o modelos de inteligencia artificial generativa", "mi agente hizo el análisis".
 - Diapositiva: "IA integrada: apoya el análisis de datos y la redacción del informe".
-- Decisión del proyecto: IA independiente del proveedor (en el equipo del autor, Ollama local). Las reglas deciden los incidentes; la IA explica, redacta y sugiere, y sus citas se validan.
+- Decisión del proyecto: IA independiente del proveedor (en el equipo del autor, Anthropic `claude-haiku-5-5` por API; Ollama local resultó inviable). Las reglas deciden los incidentes; la IA explica, redacta y sugiere, y sus citas se validan.
 
 ## Contenido del informe (diapositiva)
 Resumen ejecutivo · hallazgos identificados · explicación técnica de cada hallazgo · evidencias en los logs · criticidad y justificación · posible impacto · plan de acción (investigar, contener, remediar) · recomendaciones generales.

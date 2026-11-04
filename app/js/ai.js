@@ -287,22 +287,24 @@ Reglas obligatorias:
     return [...picked].map(id => byId.get(id)).filter(Boolean).sort((a, b) => a.tsDate - b.tsDate);
   }
   const citeReminder = sample => `Recuerda: empieza directamente por los hechos y cierra cada frase con sus Log_ID entre corchetes, copiados de <registros>, como [${sample[0]?.id}].`;
+  // Hasta 4 citas por hallazgo y cuántas más tiene, para que la IA no crea que la regla omite evidencias
+  const evidenceList = (ids, total) => ids.slice(0, 4).map(id => `[${id}]`).join(" ") + (total > Math.min(4, ids.length) ? ` (y ${total - Math.min(4, ids.length)} más)` : "");
   function explainMessages(inc, rows) {
     const byId = new Map(rows.map(r => [r.id, r]));
     const sample = evidenceRows(inc, byId);
     const shown = new Set(sample.map(r => r.id));
-    const hallazgos = inc.findings.map(f => `- ${f.sev} · ${f.rule} (${f.mitre}): ${f.title}. ${f.detail} Motivo: ${f.why} Evidencias: ${f.evidence.filter(id => shown.has(id)).slice(0, 4).map(id => `[${id}]`).join(" ")}`).join("\n");
+    const hallazgos = inc.findings.map(f => `- ${f.sev} · ${f.rule} (${f.mitre}): ${f.title}. ${f.detail} Motivo: ${f.why} Evidencias: ${evidenceList(f.evidence.filter(id => shown.has(id)), f.evidence.length)}`).join("\n");
     return [{ role: "system", content: SYSTEM }, { role: "user", content: `Explica este incidente en un máximo de 150 palabras: qué ocurrió, en qué orden y por qué importa.
 
 Incidente ${inc.id}: ${inc.title}
 Criticidad asignada por las reglas: ${inc.sev}
 Ventana: ${inc.start.ts} a ${inc.end.ts}
-Cuentas: ${inc.users.join(", ") || "ninguna"}. IP: ${inc.ips.join(", ") || "ninguna"}. Equipos: ${inc.hosts.join(", ")}.
+Cuentas: ${inc.users.join(", ") || "ninguna"}. IP señaladas por las reglas: ${inc.ips.join(", ") || "ninguna (las de cada evento están en los registros)"}. Equipos: ${inc.hosts.join(", ")}.
 
 Hallazgos de las reglas:
 ${hallazgos}
 
-${sample.length} de ${inc.evidence.length} eventos de evidencia:
+${sample.length === inc.evidence.length ? `Los ${sample.length} eventos de evidencia:` : `Extracto: ${sample.length} de los ${inc.evidence.length} eventos de evidencia. Los demás existen pero no caben en este mensaje; no digas que faltan en los registros.`}
 <registros>
 ${sample.map(line).join("\n")}
 </registros>
