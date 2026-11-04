@@ -4,9 +4,29 @@ Una entrada por fase, la más reciente arriba. Cada entrada incluye: fecha · qu
 
 ---
 
+## 2026-11-04 · Fase 6: empaquetado y portabilidad (pendiente del visto bueno del usuario)
+
+- **Para grabar** (sustituye a la de la fase 5): graba desde la carpeta de trabajo, no desde el zip, porque el zip no lleva `ai.config.local.js` y la clave no debe copiarse a otro archivo. Abre `ABRIR_AQUI.html` con doble clic (con Anthropic no hace falta `iniciar`); en Ajustes de IA comprueba que la configuración activa es "archivo ai.config.local.js" y pulsa "Probar conexión"; genera las explicaciones y el resumen ejecutivo **antes** de grabar, porque se guardan durante la sesión del navegador; en la pestaña Informe escribe analista y cliente, marca "Revisado por el analista" y descarga los dos PDF. Para mostrar que no hace falta instalar nada, enseña aparte el zip descomprimido, sin IA, con `datasets/demo_publico.xlsx`.
+- **Motivo**: en Linux, `iniciar.sh` pedía Node y no abría nada, lo que confunde aunque la app no lo necesite.
+- **Qué cambió**:
+  - `ABRIR_AQUI.html` en la raíz: redirige a `app/index.html` y, si no, muestra un enlace.
+  - `iniciar.sh` e `iniciar.bat`: con Node, igual que antes; sin Node, abren `app/index.html` (`xdg-open` en Linux, `open` en macOS, `start` en Windows) y explican que Node solo hace falta para Ollama. Si no pueden abrirlo, muestran la ruta del archivo.
+  - Licencia MIT (`LICENSE`, decisión del usuario). Licencias de terceros junto a cada librería: SheetJS Apache-2.0 (`xlsx.LICENSE.txt`, descargada de `cdn.sheetjs.com`), pdfmake MIT y **Roboto con SIL OFL 1.1** (`Roboto.OFL.txt`). Que Roboto es OFL y no MIT se comprobó leyendo la tabla `name` de la fuente: la OFL exige acompañar la fuente con su licencia.
+  - SheetJS: el `xlsx.full.min.js` incluido coincide byte a byte con el de `cdn.sheetjs.com/xlsx-0.20.3` (mismo SHA-256).
+  - `tools/empaquetar.js`: zip con `git archive` desde HEAD, lista cerrada de archivos y `core.autocrlf=false`; rechaza `.local`, `docs/`, `tests/`, `CLAUDE*` y cualquier `.xlsx` que no sea la demo. El resultado es reproducible: dos ejecuciones dan el mismo SHA-256. `iniciar.sh` conserva el permiso de ejecución dentro del zip.
+  - README: empieza por cómo abrirla sin instalar nada, deja claro que sin clave de API todo funciona con plantillas y añade la tabla de librerías (versión, licencia y SHA-256) con la nota de que ningún script es necesario. Ajustes y `ai.config.example.js` también lo dicen.
+- **Zip v1.0** (commit `2c2b1f9`): `entrega/triage-soc-l2-v1.0.zip`, 29 archivos, 1.249 KB. SHA-256 `2892fd5dd46a1bf452991a285683a678b7cd0453c8a352e0aad575a0fcbcc6dd`. Revisión contra el Excel del cliente (774 valores de IP, cuenta, equipo y Log_ID): 0 coincidencias en los archivos de texto; en `demo_publico.xlsx` solo coinciden `-` y la cuenta integrada de Windows `IIS APPPOOL\DefaultAppPool`.
+- **Matriz** (zip descomprimido con el Explorador en una carpeta `Prueba ñandú con espacios`, `file://`, sin IA):
+  - Windows · Edge 156 y Chrome 156: `ABRIR_AQUI.html` redirige, la demo da 7 incidentes (igual que el motor en Node), dashboard, Ajustes dice que funciona sin IA, los botones de PDF esperan a la revisión, los 120 Log_ID del informe existen, y los dos PDF se descargan (32 KB y 117 KB, válidos). Sin errores de JavaScript; la consola solo muestra que faltan `sample.local.js` y `ai.config.local.js`, que son opcionales.
+  - `iniciar.bat` sin Node (PATH sin Node), desde la ruta con tildes: muestra el aviso y llama a `start`; no pude comprobar desde aquí que se abriera la pestaña en el navegador predeterminado.
+  - `iniciar.sh` sin Node, en Git Bash: muestra el aviso; con un `xdg-open` simulado lo llama con la ruta completa con tildes; sin él, muestra la ruta.
+  - **Linux · Firefox y Chromium: sin probar** (no hay Linux ni Firefox en este equipo). Los prueba el usuario.
+- **Pruebas**: todas en verde (generalización, dashboard 144, IA 64, informe 388, PDF 160, servidor 14, cliente).
+- **Pendiente**: visto bueno del usuario; matriz en Linux.
+
 ## 2026-11-04 · Fase 5: informes en PDF (pendiente del visto bueno del usuario)
 
-- **Para grabar**: abre `app/index.html` con doble clic (con Anthropic no hace falta `iniciar`); en Ajustes de IA comprueba que la configuración activa es "archivo ai.config.local.js" y pulsa "Probar conexión"; genera las explicaciones y el resumen ejecutivo **antes** de grabar, porque se guardan durante la sesión del navegador; en la pestaña Informe escribe analista y cliente, marca "Revisado por el analista" y descarga los dos PDF.
+- **Para grabar** (ver la de la fase 6, que la sustituye): abre `app/index.html` con doble clic (con Anthropic no hace falta `iniciar`); en Ajustes de IA comprueba que la configuración activa es "archivo ai.config.local.js" y pulsa "Probar conexión"; genera las explicaciones y el resumen ejecutivo **antes** de grabar, porque se guardan durante la sesión del navegador; en la pestaña Informe escribe analista y cliente, marca "Revisado por el analista" y descarga los dos PDF.
 - **Decisión del usuario**: las antiguas fases 5 (informes) y 6 (PDF) se fusionan. Los informes son archivos PDF generados en el navegador, sin diálogo de impresión.
 - **Qué cambió**:
   - `js/report.js`: contenido de ambos informes solo a partir del motor. Ejecutivo: qué pasó, riesgo global, impacto, tabla de incidentes y hasta 5 decisiones. Técnico: las 8 secciones del reto y el anexo de metodología con los umbrales reales del motor. Planes de acción, impacto y decisiones son plantillas por tipo de incidente (webshell, ransomware, intrusión, exfiltración, persistencia, spraying, fuerza bruta, acceso externo) rellenadas con cuentas, equipos e IP reales.

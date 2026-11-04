@@ -185,12 +185,12 @@ Aceptación:
 - Dejar claro (README, Ajustes y `ai.config.example.js`) que sin clave de API todo funciona con plantillas.
 
 Aceptación (desde el zip descomprimido, en una ruta con espacios y tildes, sin Node):
-- [ ] Windows · Edge: abrir `ABRIR_AQUI.html`, cargar `demo_publico.xlsx`, ver dashboard y descargar los dos PDF.
-- [ ] Windows · Chrome: lo mismo.
+- [x] Windows · Edge: abrir `ABRIR_AQUI.html`, cargar `demo_publico.xlsx`, ver dashboard y descargar los dos PDF.
+- [x] Windows · Chrome: lo mismo.
 - [ ] Linux · Firefox: lo mismo (lo prueba el usuario).
 - [ ] Linux · Chromium: lo mismo (lo prueba el usuario).
-- [ ] `iniciar` sin Node abre la app en Windows y en Linux.
-- [ ] El zip no contiene datos del cliente ni archivos `.local`, y su SHA-256 coincide.
+- [ ] `iniciar` sin Node abre la app en Windows y en Linux (probado el aviso en Windows y en Git Bash; falta ver que se abre el navegador).
+- [x] El zip no contiene datos del cliente ni archivos `.local`, y su SHA-256 coincide.
 
 ## [ ] Fase 7: Repositorio listo para GitHub (día 2, unas 1 h)
 
