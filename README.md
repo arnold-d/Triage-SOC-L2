@@ -1,4 +1,11 @@
-# Triage SOC L2
+# Triage SOC L2 v1.0
+
+Primera versión. Descarga triage-soc-l2-v1.0.zip, descomprímelo y abre ABRIR_AQUI.html en el navegador. No hace falta instalar nada; sin clave de API, todo funciona con plantillas.
+
+SHA-256 de triage-soc-l2-v1.0.zip:
+d9dcbe117bae617b39f7a76c40df8617f6cdbb6eabc5f77dfa9d477fdb0331e2
+
+Comprobar: sha256sum triage-soc-l2-v1.0.zip (Linux) o Get-FileHash triage-soc-l2-v1.0.zip (PowerShell).
 
 App web para el triage de un analista SOC de nivel 2. Carga un Excel exportado de un SIEM, detecta y correlaciona incidentes con reglas, clasifica su riesgo (Crítico, Alto, Medio, Bajo) y genera un informe ejecutivo y otro técnico en PDF. Una IA opcional explica y redacta, y cada cita que hace se comprueba contra el archivo. Todo se procesa en el navegador.
 
