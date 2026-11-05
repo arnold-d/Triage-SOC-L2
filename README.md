@@ -1,4 +1,4 @@
-# Triage SOC L2
+# Triage SOC L2 
 
 App web para el triage de un analista SOC de nivel 2. Carga un Excel exportado de un SIEM, detecta y correlaciona incidentes con reglas, clasifica su riesgo (Crítico, Alto, Medio, Bajo) y genera un informe ejecutivo y otro técnico en PDF. Una IA opcional explica y redacta, y cada cita que hace se comprueba contra el archivo. Todo se procesa en el navegador.
 
