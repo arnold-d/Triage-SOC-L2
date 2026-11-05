@@ -5,7 +5,7 @@ App web para el triage de un analista SOC de nivel 2. Carga un Excel exportado d
 Proyecto final del bootcamp de Analista SOC L2 (noviembre de 2026).
 
 - **Video de la demo:** [RELLENAR: enlace al video](RELLENAR_ENLACE_VIDEO)
-- **Informe en PDF generado con la app:** [RELLENAR: enlace al PDF](RELLENAR_ENLACE_PDF)
+- **Informe en PDF generado con la app:** https://drive.google.com/file/d/1BJRT3vU0L1dALGp_rXdTulzB_xMexJg-/view?usp=drive_link
 
 ![Dashboard de la app con el dataset sintético datasets/demo_publico.xlsx](docs/img/dashboard.png)
 
